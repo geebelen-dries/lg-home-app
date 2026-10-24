@@ -210,6 +210,10 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(bad.v['grid.cols'] === 14 && bad.v['grid.tileH'] === 80 && bad.v['grid.radius'] === 100 && bad.v['grid.mode'] === 'below' && bad.v['grid.align'] === 'left' && bad.v['type.scale'] === 1 && bad.v['type.font'] === 'default' && bad.v['clock.layout'] === 'inline' && bad.v['clock.scale'] === 2.5, 'numbers are clamped, enums and types are checked');
   ok(bad.v['effects.glow'] === 1 && bad.v['effects.speed'] === 1 && bad.v['effects.wallpaper'] === '' && bad.v['effects.wallpaperDim'] === 0.9 && !('css' in bad.v), 'effects are clamped, a wallpaper path is refused and unknown keys are dropped');
   ok(themeMod.normalize({}, '../x') === null, 'a bad theme id is refused');
+  const badLift = themeMod.normalize({ tile: { focus: 'glow', label: 7 }, grid: { lift: 99, icon: 'stretch' }, effects: { glowShape: 'round' } }, 'badlift');
+  ok(badLift.v['tile.focus'] === 'ring' && badLift.v['tile.label'] === 'none' && badLift.v['grid.lift'] === 40 && badLift.v['grid.icon'] === 'fill' && badLift.v['effects.glowShape'] === 'corner', 'the focus style, label, lift, icon and glow shape are checked and fall back');
+  const page = fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8'), fonts = (page.match(/url\(([\w.-]+\.woff2)\)/g) || []).map(u => u.slice(4, -1));
+  ok(fonts.length === 3 && fonts.every(f => fs.existsSync(path.join(root, 'app', f))) && fs.readdirSync(path.join(root, 'app')).every(n => fs.statSync(path.join(root, 'app', n)).isFile()), 'the fonts the launcher names are in app/, which has no folders (bootstrap.sh copies app/* flat)');
   const tbase = themeMod.normalize({ grid: { cols: 7 }, dock: { count: 6 } }, 'base'), tkid = themeMod.normalize({ grid: { cols: 'many' }, bar: { style: 'round' } }, 'kid', tbase.v);
   ok(tkid.v['grid.cols'] === 7 && tkid.v['dock.count'] === 6 && tkid.v['bar.style'] === 'round', 'a theme that extends another keeps its values where its own are missing or invalid');
   // a stand-in for raw.githubusercontent.com: the repository's folder, plus a few themes that are wrong on purpose
@@ -256,6 +260,8 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   r = await tcall('set', { accent: 'blue' }); ok(r.code === 400, 'an accent must be a hex colour');
   r = await tcall('set', { id: 'bloom', accent: '#FF8A3D' }); ok(th.resolved().vars['--acc'] === '#ff8a3d' && th.resolved().vars['--acc-ink'] === '#0b0c10' && th.resolved().vars['--focus'] === '#ff8a3d', 'an accent overrides the theme\'s own, with readable text on it');
   r = await tcall('revert'); ok(r.j.current.id === 'bloom' || r.j.current.id === 'kid', 'revert goes back to the previous theme');
+  r = await tcall('set', { id: 'lift' }); const lf = th.resolved();
+  ok(r.code === 200 && lf.attrs.focus === 'lift' && lf.attrs.tlabel === 'focus' && lf.attrs.gicon === 'center' && lf.attrs.glow === 'top' && lf.attrs.font === 'inter' && lf.vars['--grid-lift'] === '-8px' && lf.vars['--tile-w'] === '313px' && lf.cols === 5 && /^"CYTV Inter"/.test(lf.vars['--font']) && lf.push && lf.push.up > 0, 'Lift resolves to five 16:9 tiles that lift on focus, labels, a top glow and Inter');
   ghUp = false; await th.refreshCatalogue(true);
   r = await tcall('list', null, 'GET'); ok(r.j.catalogue.ok === false && r.j.catalogue.error && r.j.themes.some(x => x.id === 'bloom' && x.installed), 'GitHub unreachable: the list shows the themes on the TV and says why');
   r = await tcall('set', { id: 'bloom' }); ok(r.code === 200 && r.j.current.id === 'bloom', 'GitHub unreachable: a downloaded theme can still be chosen');

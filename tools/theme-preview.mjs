@@ -5,8 +5,8 @@
 // grid) and <out>/menu.png (the Customise menu), 1920 x 1080. With --write it also writes themes/<id>/preview.jpg (800 x 450, the screenshot
 // the TV shows). Needs Node.js 22 or newer and Google Chrome (set CHROME to its path when it is not found); nothing is installed.
 // The page talks to a small stand-in for the TV's service on 127.0.0.1:8765, so stop anything else that uses that port.
-import http from 'node:http'; import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path'; import { spawn, spawnSync } from 'node:child_process'; import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url), ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), '..');
+import http from 'node:http'; import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path'; import { spawn, spawnSync } from 'node:child_process'; import { createRequire } from 'node:module'; import { fileURLToPath } from 'node:url';
+const require = createRequire(import.meta.url), ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2), id = args.find(a => /^[a-z0-9-]{1,30}$/.test(a) && args[args.indexOf(a) - 1] !== '--out');
 const out = args.includes('--out') ? path.resolve(args[args.indexOf('--out') + 1]) : path.join(os.tmpdir(), 'cytv-theme-preview'), write = args.includes('--write');
 if (!id) { console.error('usage: node tools/theme-preview.mjs <theme id> [--out <folder>] [--write]'); process.exit(2); }
@@ -34,6 +34,8 @@ const srv = http.createServer(async (q, r) => {
   if (q.method === 'OPTIONS') { r.writeHead(204); return r.end(); }
   const j = o => { r.writeHead(200, { 'content-type': 'application/json' }); r.end(JSON.stringify(o)); };
   if (u === '/home.html') { r.writeHead(200, { 'content-type': 'text/html' }); return r.end(page); }
+  const fm = /^\/(inter-\d00\.woff2)$/.exec(u);   // the fonts the page loads next to itself
+  if (fm) { r.writeHead(200, { 'content-type': 'font/woff2' }); return r.end(fs.readFileSync(path.join(ROOT, 'app', fm[1]))); }
   if (u.startsWith('/api/theme/')) return theme.handle(q, r, u, body);
   if (u === '/api/apps') return j({ apps: apps.map(a => ({ id: a.id, title: a.title })), config: { dock: apps.slice(0, 6).map(a => a.id), theme: theme.resolved() }, usage: Object.fromEntries(apps.map((a, i) => [a.id, 1000 - i])), version: '9.9.9' });
   if (u === '/api/inputs') return j({ devices: [{ hdmiPlugIn: true, label: 'Game console', port: 1, appId: 'hdmi1', activate: false }, { hdmiPlugIn: false, label: 'HDMI 2', port: 2, appId: 'hdmi2', activate: false }] });

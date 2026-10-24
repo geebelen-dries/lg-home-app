@@ -2,6 +2,10 @@
 <html><head><meta charset="utf-8"><title>Home</title>
 <meta name="viewport" content="width=1920">
 <style>
+/* Inter (SIL Open Font License 1.1, see THIRD-PARTY.md), Latin subset, for themes with type.font "inter". It is only loaded when a theme uses it. */
+@font-face{font-family:"CYTV Inter";src:url(inter-400.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"CYTV Inter";src:url(inter-500.woff2) format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"CYTV Inter";src:url(inter-600.woff2) format("woff2");font-weight:600 700;font-style:normal;font-display:swap}
 /* Built for a weak TV GPU: only transform and opacity ever animate; no blur, masks or filters. Everything a theme changes (manager > Theme) is a
    variable here; the service works the values out (helper/theme.js) and the defaults below are the original look. */
 :root{
@@ -13,7 +17,7 @@
   --name-d:block; --name-x:96px; --name-y:150px; --name-a:left; --name-s:1;
   --view-top:300px; --dock-l:96px; --dock-r:auto; --dock-t:60px; --dock-b:auto; --dock-tx:none; --dock-w:408px; --dock-h:230px; --dock-gap:32px; --dock-rad:36px;
   --dock-panel:0; --dock-pad:0px; --dock-lift:-10px; --dock-fs:1.05;
-  --cols:10; --tile-w:151px; --tile-h:151px; --gap-x:24px; --gap-y:26px; --tile-r:34px; --grid-l:96px; --grid-w:1728px; --grid-t:350px; --grid-fs:1.12; --ov-dim:.95;
+  --cols:10; --tile-w:151px; --tile-h:151px; --gap-x:24px; --gap-y:26px; --tile-r:34px; --grid-l:96px; --grid-w:1728px; --grid-t:350px; --grid-fs:1.12; --grid-lift:0px; --ov-dim:.95;
   --gloss:0; --tile-border:0; --ring-w:4px; --ring-off:4px;
 }
 *{box-sizing:border-box;margin:0}
@@ -24,6 +28,8 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 .glow{position:absolute;left:0;top:0;width:1920px;height:720px;opacity:0;transition:opacity calc(.35s*var(--spd)) linear;will-change:opacity;
   background:radial-gradient(ellipse 1400px 640px at 26% -6%,rgba(var(--c),.45),transparent 70%)}
 .glow.on{opacity:var(--glow-op)}
+/* a wash across the width that fades out over the top 60% of the screen */
+[data-glow=top] .glow{height:648px;transition:opacity calc(.35s*var(--spd)) linear,transform calc(.3s*var(--spd)) ease-out;background:linear-gradient(180deg,rgba(var(--c),.4),rgba(var(--c),.28) 22%,rgba(var(--c),.14) 50%,rgba(var(--c),.04) 78%,rgba(var(--c),0))}
 
 #top{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:5;pointer-events:none}
 #clock{position:absolute;left:var(--clock-l);right:var(--clock-r);top:var(--clock-t);bottom:var(--clock-b);transform:var(--clock-tx);display:var(--clock-d);align-items:center;height:76px}
@@ -64,10 +70,25 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 .tile::after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;pointer-events:none;opacity:var(--gloss);
   background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 46%,rgba(0,0,0,.24))}
 
-.tile{--c:74,84,112;--b:20,22,27;position:relative;display:flex;align-items:center;justify-content:center;will-change:transform;
+.tile{--c:74,84,112;--b:20,22,27;position:relative;will-change:transform;
   background:rgb(var(--b));box-shadow:inset 0 0 0 1px rgba(255,255,255,var(--tile-border));transition:transform calc(.12s*var(--spd)) cubic-bezier(.3,1.35,.5,1)}
-.snap .tile,.snap .pill{transition:none}   /* held arrow key: follow the focus without animating each step */
-.tile.fill{overflow:hidden}
+/* .in holds the picture and clips it to the corners; the tile itself does not clip, so the lift shadow and the label can sit outside it */
+.tile .in{position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.tile .cap{display:none}
+/* lift: no ring; the tile rises, a shadow drawn once fades in under it and a light sheen passes over it (opacity and transform only) */
+[data-focus=lift] .tile{transition:transform calc(.22s*var(--spd)) cubic-bezier(.2,.8,.25,1)}
+[data-focus=lift] .tile::before{content:'';position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;pointer-events:none;opacity:0;
+  box-shadow:0 30px 44px -14px rgba(0,0,0,.75),0 10px 18px -6px rgba(0,0,0,.4);transition:opacity calc(.22s*var(--spd)) linear}
+[data-focus=lift] .tile.f::before{opacity:1}
+[data-focus=lift] .tile .in::after{content:'';position:absolute;left:0;top:0;bottom:0;width:55%;pointer-events:none;opacity:0;transform:translateX(-100%);
+  background:linear-gradient(105deg,rgba(255,255,255,0) 15%,rgba(255,255,255,.16) 50%,rgba(255,255,255,0) 85%)}
+[data-focus=lift] .tile.f .in::after{opacity:1;transform:translateX(190%);transition:transform calc(.8s*var(--spd)) cubic-bezier(.3,.1,.3,1) calc(.1s*var(--spd)),opacity calc(.1s*var(--spd)) linear}
+[data-focus=lift] .tile.f{outline:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,var(--tile-border))}
+/* the name of the focused app, small, under its tile */
+[data-tlabel=focus] .tile .cap{display:block;position:absolute;left:-24px;right:-24px;top:calc(100% + 16px);text-align:center;font-size:calc(24px*var(--fs));font-weight:500;line-height:1.25;
+  color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity calc(.18s*var(--spd)) linear}
+[data-tlabel=focus] .tile.f .cap{opacity:1}
+.snap .tile,.snap .pill,.snap .tile.f::before,.snap .tile.f .in::after,.snap .tile .cap{transition:none}   /* held arrow key: follow the focus without animating each step */
 .tile.fill img{object-fit:fill}
 .tile.press{transform:scale(.96)!important;transition-duration:calc(.06s*var(--spd))}
 .tile.launching{opacity:.82}
@@ -82,13 +103,19 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 #grid .tile{height:var(--tile-h);border-radius:var(--tile-r)}
 #grid .tile img{width:64%;height:64%}
 #grid .tile svg{width:64px;height:64px}
-#grid .tile.f{transform:scale(var(--grid-fs))}
-#grid .tile.sys{flex-direction:column;gap:8px}
+#grid .tile.f{transform:translateY(var(--grid-lift)) scale(var(--grid-fs))}
+[data-gicon=center] #grid .tile img{width:auto;height:56%;max-width:46%}
+#grid .tile.sys .in{flex-direction:column;gap:8px}
 .slab{font-size:22px;font-weight:600;color:var(--ink2)}
 #grid .tile.sys{background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
 /* an external input in the dock: the HDMI glyph over the name the TV shows for that input */
-#dock .tile.ext{flex-direction:column;gap:10px}
+#dock .tile.ext .in{flex-direction:column;gap:10px}
 #dock .tile.ext .slab{max-width:88%;font-size:20px;line-height:1.2;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Inter is set lighter than the TV's own face */
+[data-font=inter] #time{font-weight:500;letter-spacing:-.01em}
+[data-font=inter] #name,[data-font=inter] #ov h2{font-weight:600;letter-spacing:-.02em}
+[data-font=inter] .tile .t,[data-font=inter] .slab{font-weight:500}
 
 #toast{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:40;padding:18px 38px;border-radius:34px;font-size:28px;
   background:var(--panel);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);opacity:0;pointer-events:none}
@@ -310,7 +337,9 @@ function iconColor(img,id){
   if(an){col.k=an.k;if(an.box)col.box=an.box;if(an.top&&an.bot){col.gt=an.top;col.gb=an.bot}}
   if(tainted)col.t=1;
   return col}
-/* a picture with a transparent margin fills a grid tile (cropped to its visible part); in the wide dock tiles it keeps its size on a tile of its own colour */
+/* a picture with a transparent margin fills a grid tile (cropped to its visible part); in the wide dock tiles (and grid tiles of a theme with
+   grid.icon "center") it keeps its size on a tile of its own colour */
+function wide(d){return TH.gicon==='center'||!!(d.parentNode&&d.parentNode.id==='dock')}
 function fit(d,dock){
   var i=d._i,c=d._col;if(!i)return;
   i.removeAttribute('style');d.classList.remove('fill');d.style.background='';
@@ -328,22 +357,25 @@ function paint(d,col){d.style.setProperty('--c',col.c.join(','));d.style.setProp
 function tile(a){
   if(tiles[a.id]){   /* an input tile may have been built before its device arrived (placeholder name, no app id): refresh it */
     var done=tiles[a.id];
-    if(a.input&&done._a&&done._a.title!==a.title){done._a=a;if(done._slab)done._slab.textContent=a.title}
+    if(a.input&&done._a&&done._a.title!==a.title){done._a=a;if(done._slab)done._slab.textContent=a.title;done._cap.textContent=a.title}
     return done}
+  /* .in holds the picture (and clips it), .cap is the small name under the tile that some themes show on focus */
   var d=document.createElement('div');d.className='tile'+(a.sys?' sys':'');d._a=a;
+  var n=document.createElement('div');n.className='in';d.appendChild(n);
+  var cap=document.createElement('div');cap.className='cap';cap.textContent=a.sys?'LG Home':a.title;d.appendChild(cap);d._cap=cap;
   tiles[a.id]=d;hit(d);
-  if(a.sys){d.innerHTML=svg(a.icon)+'<div class="slab">'+'LG Home'+'</div>';return d}
+  if(a.sys){n.innerHTML=svg(a.icon)+'<div class="slab">'+'LG Home'+'</div>';return d}
   if(a.input){   /* an external input: the HDMI glyph and the name the TV shows for it, not an app icon */
     d.className+=' ext';var ih=hsl2rgb(hashHue(a.id),.42,.42);paint(d,{c:ih,b:hsl2rgb(hashHue(a.id),.4,.2)});
-    d.innerHTML=svg(a.icon);var sl=document.createElement('div');sl.className='slab';sl.textContent=a.title;d.appendChild(sl);d._slab=sl;return d}
+    n.innerHTML=svg(a.icon);var sl=document.createElement('div');sl.className='slab';sl.textContent=a.title;n.appendChild(sl);d._slab=sl;return d}
   var known=colors[a.id];
   if(known){paint(d,known);d._col=known}
   var i=new Image();i.alt='';i.decoding='async';d._i=i;
   if(!known)i.crossOrigin='anonymous';
-  i.onload=function(){if(!colors[a.id]){var col=iconColor(i,a.id);d._col=col;paint(d,col);fit(d,!!(d.parentNode&&d.parentNode.id==='dock'));if(!col.t){colors[a.id]=col;storeSoon()}if(rows[r]&&rows[r][c]===d)glowNow(d)}};
-  i.onerror=function(){i.remove();var t=document.createElement('div');t.className='t';t.textContent=a.title;d.appendChild(t);
+  i.onload=function(){if(!colors[a.id]){var col=iconColor(i,a.id);d._col=col;paint(d,col);fit(d,wide(d));if(!col.t){colors[a.id]=col;storeSoon()}if(rows[r]&&rows[r][c]===d)glowNow(d)}};
+  i.onerror=function(){i.remove();var t=document.createElement('div');t.className='t';t.textContent=a.title;n.appendChild(t);
     if(!colors[a.id]){var f=hsl2rgb(hashHue(a.id),.42,.42);paint(d,{c:f,b:hsl2rgb(hashHue(a.id),.4,.2)})}};   /* not remembered: a failed load must not pin a made-up colour */
-  i.src=a.id==='__live'?LIVE_ICON:API+'/icon/'+encodeURIComponent(a.id);d.appendChild(i);if(i.decode)i.decode().catch(function(){});
+  i.src=a.id==='__live'?LIVE_ICON:API+'/icon/'+encodeURIComponent(a.id);n.appendChild(i);if(i.decode)i.decode().catch(function(){});
   return d}
 
 /* ---------- ambient glow: two layers cross-fade, updated only once focus settles ---------- */
@@ -355,17 +387,17 @@ function glowNow(e){
 function glowSoon(e){clearTimeout(gT);gT=setTimeout(function(){glowNow(e)},110)}
 
 /* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
-var TH0={cols:10,tileH:151,gapY:26,gt:350,viewH:780,dockN:4,overlay:false,push:null,overlayH:510,glow:''},TH=TH0,themeKeys=[],themeAttrs=['data-bar','data-labels','data-clock','data-grid','data-galign'];
+var TH0={cols:10,tileH:151,gapY:26,gt:350,viewH:780,dockN:4,overlay:false,push:null,overlayH:510,glow:'',gicon:'fill',glowTop:false},TH=TH0,themeKeys=[],themeAttrs=['data-bar','data-labels','data-clock','data-grid','data-galign','data-gicon','data-focus','data-tlabel','data-glow','data-font'];
 function applyTheme(t){
   var st=document.documentElement.style,b=document.body,k;
   for(k=0;k<themeKeys.length;k++)st.removeProperty(themeKeys[k]);themeKeys=[];
-  for(k=0;k<themeAttrs.length;k++)b.removeAttribute(themeAttrs[k]);b.classList.remove('grid-open');
+  for(k=0;k<themeAttrs.length;k++)b.removeAttribute(themeAttrs[k]);b.classList.remove('grid-open');$('gA').style.transform=$('gB').style.transform='';
   if(!t||!t.vars){TH=TH0;return}
   for(k in t.vars){st.setProperty(k,t.vars[k]);themeKeys.push(k)}
   var w=t.wallpaper;
   if(w){var d='rgba('+t.nightRgb+','+w.dim+')';st.setProperty('--wall','linear-gradient('+d+','+d+'),url("'+API+'/api/theme/wallpaper/'+w.id+'/'+w.file+'")');themeKeys.push('--wall')}
   for(k in t.attrs)b.setAttribute('data-'+k,t.attrs[k]);
-  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,gt:t.gt||350,viewH:t.viewH||780,dockN:t.dockN||4,overlay:!!t.overlay,push:t.push||null,overlayH:t.overlayH||510,glow:t.glowRgb||''}}
+  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,gt:t.gt||350,viewH:t.viewH||780,dockN:t.dockN||4,overlay:!!t.overlay,push:t.push||null,overlayH:t.overlayH||510,glow:t.glowRgb||'',gicon:t.attrs&&t.attrs.gicon||'fill',glowTop:!!(t.attrs&&t.attrs.glow==='top')}}
 
 function setFocus(nr,nc,first){
   var old=rows[r]&&rows[r][c];if(old)old.classList.remove('f');
@@ -377,7 +409,9 @@ function setFocus(nr,nc,first){
   if(TH.push){   /* the grid sits under the dock: focusing it scrolls everything up (the dock stops at its 'up' position) and the grid fades in */
     document.body.classList.toggle('grid-open',r>=2);
     var ps=0;if(r>=2){var bot=TH.push.gridTop-TH.push.up+(r-2)*(TH.tileH+TH.gapY)+TH.tileH,ex=Math.max(0,bot-(1080-60));ps=-(TH.push.up+ex)}
-    $('scroll').style.transform=ps?'translateY('+ps+'px)':'';$('grid').style.transform='';return}
+    $('scroll').style.transform=ps?'translateY('+ps+'px)':'';$('grid').style.transform='';
+    if(TH.glowTop)$('gA').style.transform=$('gB').style.transform=ps?'translateY('+ps+'px)':'';   /* the glow belongs to the top: it leaves with the dock */
+    return}
   if(TH.overlay){   /* the grid is an overlay above the dock: it opens when the focus goes down into it and scrolls on its own */
     document.body.classList.toggle('grid-open',r>=2);
     var gs=0;if(r>=2)gs=Math.min(0,TH.overlayH-((r-2)*(TH.tileH+TH.gapY)+TH.tileH+24));
@@ -549,7 +583,7 @@ function rebuild(){
   var dk=$('dock'),gd=$('grid'),bar=$('bar');
   dk.textContent='';gd.textContent='';bar.textContent='';
   var d=dock.map(function(a){var t=tile(a);dk.appendChild(t);fit(t,true);return t});
-  var g=rest.map(function(a){var t=tile(a);gd.appendChild(t);fit(t,false);return t});
+  var g=rest.map(function(a){var t=tile(a);gd.appendChild(t);fit(t,TH.gicon==='center');return t});
   var tb=shownBar().concat([{label:'Customise',icon:'edit',action:'customize',fixed:true}]).map(function(o){
     var p=document.createElement('div');p.className='pill';p._o=o;p.innerHTML=svg(o.icon)+'<span></span>';p.lastChild.textContent=barLabel(o);
     hit(p);bar.appendChild(p);return p});

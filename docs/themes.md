@@ -33,6 +33,7 @@ folder of the GitHub repository (the `main` branch):
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
+| Lift | Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a colour wash over the top of the screen and the Inter typeface. Down moves the row up and the apps appear below it. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -144,7 +145,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `surface.menuAlpha` | 0.5 to 1 | `0.97` | Opacity of the dark layer behind menus. |
 | `surface.rowRadius` | 0 to 50 | `30` | Corner radius of menu rows. |
 | **type** | | | |
-| `type.font` | `default`, `serif`, `mono` | `default` | The typeface: the TV's own, a serif or a monospace. |
+| `type.font` | `default`, `serif`, `mono`, `inter` | `default` | The typeface: the TV's own, a serif, a monospace or Inter (shipped with the launcher, lighter weights). |
 | `type.scale` | 0.8 to 1.3 | `1` | Scale of the text of buttons, menus and tiles. |
 | **clock** | | | |
 | `clock.show` | `true` or `false` | `true` | Show the clock. |
@@ -200,6 +201,8 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `grid.y` | px, 0 to 1000 | empty | Distance of the grid from the top edge, in px. Empty: under the dock, or 290 for an overlay. |
 | `grid.clipTop` | 0 to 600 | `300` | Where scrolled rows disappear at the top, in px (`below` mode). |
 | `grid.focusScale` | 1 to 1.4 | `1.12` | Scale of the focused tile. |
+| `grid.lift` | 0 to 40 | `0` | How far the focused tile rises, in px. |
+| `grid.icon` | `fill`, `center` | `fill` | `fill`: an icon with a transparent margin is cropped to fill its tile; `center`: it keeps its shape at about half the tile height, on its own edge colour (for wide tiles). |
 | `grid.overlayDim` | 0 to 1 | `0.95` | Opacity of the layer behind the overlay grid. |
 | `grid.overlayH` | 200 to 900 | `510` | Visible height of the overlay grid before it scrolls, in px. |
 | **tile** | | | |
@@ -207,9 +210,12 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `tile.border` | 0 to 0.6 | `0` | Opacity of a thin outline on every tile. |
 | `tile.ringWidth` | 0 to 10 | `4` | Width of the focus ring, in px; 0 for none. |
 | `tile.ringOffset` | 0 to 14 | `4` | Space between a tile and its focus ring, in px. |
+| `tile.focus` | `ring`, `lift` | `ring` | `ring`: a ring around the focused tile; `lift`: no ring, the tile rises with a shadow under it and a light sheen passes over it. |
+| `tile.label` | `none`, `focus` | `none` | `focus`: the name of the focused app in small text under its tile (set `shelf.show` to false to drop the large name). |
 | **effects** | | | |
 | `effects.glow` | 0 to 1 | `1` | Strength of the ambient glow at the top. |
 | `effects.glowColor` | `app`, `accent` | `app` | `app`: taken from the focused icon; `accent`: the accent colour. |
+| `effects.glowShape` | `corner`, `top` | `corner` | `corner`: a glow from the top left; `top`: a wash across the width that fades out over the top 60% of the screen. |
 | `effects.speed` | 0 to 2 | `1` | Animation speed multiplier; 0 switches the animations off. |
 | `effects.wallpaper` | a file name | none | A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080. |
 | `effects.wallpaperDim` | 0 to 0.9 | `0.4` | How far the wallpaper is darkened with the background colour. |

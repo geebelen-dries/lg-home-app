@@ -1,0 +1,71 @@
+{
+ "name": "Lift",
+ "author": "CleanYourTV",
+ "description": "Wide 16:9 tiles, five to a row, that lift with a soft shadow when focused, the app's name in small text under it, a colour wash over the top of the screen and the Inter typeface.",
+ "colors": {
+  "night": "#08090c",
+  "panel": "#1c1d22",
+  "ink": "#f5f5f7",
+  "accent": "#f5f5f7"
+ },
+ "surface": {
+  "pillAlpha": 0.12,
+  "pillRing": 0.08,
+  "rowRadius": 16
+ },
+ "type": {
+  "font": "inter"
+ },
+ "clock": {
+  "scale": 0.72,
+  "dateScale": 0.82,
+  "y": 58
+ },
+ "bar": {
+  "style": "round",
+  "size": 56,
+  "gap": 14
+ },
+ "shelf": {
+  "show": false
+ },
+ "dock": {
+  "anchor": "bottom",
+  "align": "left",
+  "x": 96,
+  "y": 170,
+  "count": 5,
+  "w": 313,
+  "h": 176,
+  "gap": 40,
+  "radius": 16,
+  "lift": 8,
+  "focusScale": 1.1
+ },
+ "grid": {
+  "mode": "push",
+  "dockUp": 180,
+  "clipTop": 180,
+  "cols": 5,
+  "tileH": 176,
+  "gapX": 40,
+  "gapY": 76,
+  "radius": 16,
+  "x": 96,
+  "width": 1725,
+  "y": 986,
+  "focusScale": 1.1,
+  "lift": 8,
+  "icon": "center",
+  "overlayDim": 0.7
+ },
+ "tile": {
+  "focus": "lift",
+  "label": "focus",
+  "ringWidth": 0
+ },
+ "effects": {
+  "glow": 1,
+  "glowShape": "top"
+ }
+}

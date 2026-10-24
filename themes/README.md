@@ -45,6 +45,15 @@ A flower wallpaper with the dock in a glass panel at the bottom. Down moves the 
 
 Folder: [`bloom/`](bloom/)
 
+### Lift
+
+Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a colour wash over the
+top of the screen and the Inter typeface. Down moves the row up and the apps appear below it.
+
+[![Lift](lift/preview.jpg)](lift/preview.jpg)
+
+Folder: [`lift/`](lift/)
+
 ### Compact
 
 Twelve columns of smaller tiles: more apps on screen.

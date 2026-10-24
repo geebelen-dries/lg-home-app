@@ -43,6 +43,20 @@ Kazuhiko Arase, unmodified (npm package `qrcode-generator@1.4.4`, SHA-256 of the
 `18ae399f81182bc9de916e9c77b195df20cc58d6f2d55a62b085a299f1bf1780`), licensed under the MIT license (the notice is in
 the file header). The manager app loads it to draw the QR code.
 
+## Inter (typeface of the Lift theme)
+
+`app/inter-400.woff2`, `app/inter-500.woff2` and `app/inter-600.woff2` are the Latin subsets of the
+[Inter](https://github.com/rsms/inter) typeface by The Inter Project Authors, unmodified, from the npm package
+`@fontsource/inter@5.3.0` (`files/inter-latin-<weight>-normal.woff2`). Inter is licensed under the SIL Open Font
+License 1.1; the licence text is in `third-party/inter/LICENSE-Inter-OFL-1.1.txt`. The launcher loads them only when a
+theme sets `type.font` to `inter`. SHA-256:
+
+| File | SHA-256 |
+|---|---|
+| `inter-400.woff2` | `8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc` |
+| `inter-500.woff2` | `f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f` |
+| `inter-600.woff2` | `f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a` |
+
 ## Design
 
 The home-screen design follows the Android TV project [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (MIT).

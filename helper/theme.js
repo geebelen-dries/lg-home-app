@@ -38,7 +38,7 @@ const SCHEMA = [
   ['surface.pillRadius', 'int', [0, 60], 32, 'Corner radius of the top buttons (pill style only).'],
   ['surface.menuAlpha', 'num', [0.5, 1], 0.97, 'Opacity of the dark layer behind menus.'],
   ['surface.rowRadius', 'int', [0, 50], 30, 'Corner radius of menu rows.'],
-  ['type.font', 'enum', ['default', 'serif', 'mono'], 'default', 'The typeface: the TV\'s own, a serif or a monospace.'],
+  ['type.font', 'enum', ['default', 'serif', 'mono', 'inter'], 'default', 'The typeface: the TV\'s own, a serif, a monospace or Inter (shipped with the launcher, lighter weights).'],
   ['type.scale', 'num', [0.8, 1.3], 1, 'Scale of the text of buttons, menus and tiles.'],
   ['clock.show', 'bool', null, true, 'Show the clock.'],
   ['clock.date', 'bool', null, true, 'Show the date beside or under the time.'],
@@ -89,14 +89,19 @@ const SCHEMA = [
   ['grid.y', 'auto', [0, 1000], null, 'Distance of the grid from the top edge, in px. Empty: under the dock, or 290 for an overlay.'],
   ['grid.clipTop', 'int', [0, 600], 300, 'Where scrolled rows disappear at the top, in px (`below` mode).'],
   ['grid.focusScale', 'num', [1, 1.4], 1.12, 'Scale of the focused tile.'],
+  ['grid.lift', 'int', [0, 40], 0, 'How far the focused tile rises, in px.'],
+  ['grid.icon', 'enum', ['fill', 'center'], 'fill', '`fill`: an icon with a transparent margin is cropped to fill its tile; `center`: it keeps its shape at about half the tile height, on its own edge colour (for wide tiles).'],
   ['grid.overlayDim', 'num', [0, 1], 0.95, 'Opacity of the layer behind the overlay grid.'],
   ['grid.overlayH', 'int', [200, 900], 510, 'Visible height of the overlay grid before it scrolls, in px.'],
   ['tile.gloss', 'num', [0, 1], 0, 'A light highlight on every tile.'],
   ['tile.border', 'num', [0, 0.6], 0, 'Opacity of a thin outline on every tile.'],
   ['tile.ringWidth', 'int', [0, 10], 4, 'Width of the focus ring, in px; 0 for none.'],
   ['tile.ringOffset', 'int', [0, 14], 4, 'Space between a tile and its focus ring, in px.'],
+  ['tile.focus', 'enum', ['ring', 'lift'], 'ring', '`ring`: a ring around the focused tile; `lift`: no ring, the tile rises with a shadow under it and a light sheen passes over it.'],
+  ['tile.label', 'enum', ['none', 'focus'], 'none', '`focus`: the name of the focused app in small text under its tile (set `shelf.show` to false to drop the large name).'],
   ['effects.glow', 'num', [0, 1], 1, 'Strength of the ambient glow at the top.'],
   ['effects.glowColor', 'enum', ['app', 'accent'], 'app', '`app`: taken from the focused icon; `accent`: the accent colour.'],
+  ['effects.glowShape', 'enum', ['corner', 'top'], 'corner', '`corner`: a glow from the top left; `top`: a wash across the width that fades out over the top 60% of the screen.'],
   ['effects.speed', 'num', [0, 2], 1, 'Animation speed multiplier; 0 switches the animations off.'],
   ['effects.wallpaper', 'file', null, '', 'A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080.'],
   ['effects.wallpaperDim', 'num', [0, 0.9], 0.4, 'How far the wallpaper is darkened with the background colour.'],
@@ -217,7 +222,7 @@ function resolve(t, accent) {
   const dock = (dockBottom && overlay) ? place('bottom', v['dock.align'], v['dock.x'], dockY) : place('top', v['dock.align'], v['dock.x'], dockTop - viewTop);
   const clock = place(v['clock.anchor'], v['clock.align'], v['clock.x'], v['clock.y']), bar = place(v['bar.anchor'], v['bar.align'], v['bar.x'], v['bar.y']);
   const labels = v['bar.labels'] === 'auto' ? (v['bar.style'] === 'round' ? 'hide' : 'show') : v['bar.labels'];
-  const FONT = { default: '"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif', serif: 'Georgia,"Times New Roman",Times,serif', mono: 'Menlo,Consolas,"DejaVu Sans Mono",monospace' };
+  const FONT = { default: '"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif', serif: 'Georgia,"Times New Roman",Times,serif', mono: 'Menlo,Consolas,"DejaVu Sans Mono",monospace', inter: '"CYTV Inter","LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif' };
   const vars = {
     '--night': v['colors.night'], '--night-rgb': night.join(','), '--panel': v['colors.panel'], '--panel2': mix(v['colors.panel'], v['colors.ink'], 0.06), '--ink': v['colors.ink'], '--ink2': 'rgba(' + ink.join(',') + ',.62)',
     '--acc': A, '--acc-ink': lum(A) > 0.35 ? '#0b0c10' : '#ffffff', '--focus': v['colors.focus'] || A, '--font': FONT[v['type.font']], '--fs': String(v['type.scale']),
@@ -229,14 +234,14 @@ function resolve(t, accent) {
     '--view-top': px(viewTop), '--dock-l': dock.l, '--dock-r': dock.r, '--dock-t': dock.t, '--dock-b': dock.b, '--dock-tx': dock.tx, '--dock-w': px(v['dock.w']), '--dock-h': px(v['dock.h']), '--dock-gap': px(v['dock.gap']), '--dock-rad': px(v['dock.radius']),
     '--dock-panel': String(v['dock.panel']), '--dock-pad': px(pad), '--dock-lift': px(-v['dock.lift']), '--dock-fs': String(v['dock.focusScale']),
     '--cols': String(v['grid.cols']), '--tile-h': px(v['grid.tileH']), '--gap-x': px(v['grid.gapX']), '--gap-y': px(v['grid.gapY']), '--tile-r': px(v['grid.radius']), '--grid-l': px(v['grid.x']), '--grid-w': px(v['grid.width']),
-    '--grid-t': px(gridY - viewTop), '--tile-w': px(Math.floor((v['grid.width'] - (v['grid.cols'] - 1) * v['grid.gapX']) / v['grid.cols'])), '--grid-fs': String(v['grid.focusScale']), '--ov-dim': String(v['grid.overlayDim']),
+    '--grid-t': px(gridY - viewTop), '--tile-w': px(Math.floor((v['grid.width'] - (v['grid.cols'] - 1) * v['grid.gapX']) / v['grid.cols'])), '--grid-fs': String(v['grid.focusScale']), '--grid-lift': px(-v['grid.lift']), '--ov-dim': String(v['grid.overlayDim']),
     '--gloss': String(v['tile.gloss']), '--tile-border': String(v['tile.border']), '--ring-w': px(v['tile.ringWidth']), '--ring-off': px(v['tile.ringOffset']),
     '--glow-op': String(v['effects.glow']), '--spd': String(v['effects.speed']),
   };
   const w = v['effects.wallpaper'];
   return {
     id: t.id, name: t.name, vars,
-    attrs: { bar: v['bar.style'], labels, clock: v['clock.layout'], grid: mode, galign: v['grid.align'] },
+    attrs: { bar: v['bar.style'], labels, clock: v['clock.layout'], grid: mode, galign: v['grid.align'], gicon: v['grid.icon'], focus: v['tile.focus'], tlabel: v['tile.label'], glow: v['effects.glowShape'], font: v['type.font'] },
     cols: v['grid.cols'], tileH: v['grid.tileH'], gapY: v['grid.gapY'], gt: gridY - viewTop, viewH: 1080 - viewTop, dockN: v['dock.count'], overlay, push: push ? { up: Math.max(0, dockTop - v['grid.dockUp']), gridTop: gridY } : null, overlayH: v['grid.overlayH'],
     glowRgb: v['effects.glowColor'] === 'accent' ? rgb(A).join(',') : '', nightRgb: night.join(','), wallpaper: w ? { id: t.id, file: w, dim: v['effects.wallpaperDim'] } : null,
   };

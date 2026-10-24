@@ -30,6 +30,13 @@
    "preview": "large/preview.jpg"
   },
   {
+   "id": "lift",
+   "name": "Lift",
+   "author": "CleanYourTV",
+   "description": "Wide 16:9 tiles, five to a row, that lift with a soft shadow when focused, the app's name in small text under it, a colour wash over the top of the screen and the Inter typeface.",
+   "preview": "lift/preview.jpg"
+  },
+  {
    "id": "midnight",
    "name": "Midnight",
    "author": "CleanYourTV",
