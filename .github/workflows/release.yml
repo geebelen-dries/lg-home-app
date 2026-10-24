@@ -1,0 +1,49 @@
+# Publish a release that install.sh and the manager app can install.
+#
+#   git tag v1.5.17 && git push origin v1.5.17
+#
+# The assets it publishes must keep these exact names, because install.sh and helper/manager.js look for them:
+#   com.cleanyourtv.manager_<version>_all.ipk  (+ .sha256)   the package
+#   frontend-<launcher version>.tgz            (+ .sha256)   the launcher alone
+# ipk/build.py writes all four into dist/ already, so this workflow only has to upload dist/*.
+name: Release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Service checks under Node 8.12.0 (what webOS 5 ships)
+        run: sh tools/node8-check.sh
+
+      - name: Build the release
+        run: python3 ipk/build.py
+
+      - name: Check that the tag matches the service version
+        run: |
+          svc=$(sed -n "s/^const VERSION = '\(.*\)';/\1/p" helper/helper.js | head -1)
+          case "$GITHUB_REF_NAME" in
+            "v$svc") ;;
+            *) echo "::warning::tag $GITHUB_REF_NAME does not match service version $svc (v$svc); releasing anyway, the asset names carry the version" ;;
+          esac
+          ls -l dist/
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$GITHUB_REF_NAME"
+          svc=$(sed -n "s/^const VERSION = '\(.*\)';/\1/p" helper/helper.js | head -1)
+          fe=$(python3 -c "import json;print(json.load(open('app/version.json'))['version'])")
+          printf 'CleanYourTV for LG webOS, service %s, launcher %s.\n\nBuilt from %s.\nInstall on a rooted TV:\n\n    CYTV_REPO=%s curl -fsSL https://raw.githubusercontent.com/%s/%s/install.sh | sh\n' \
+            "$svc" "$fe" "${GITHUB_SHA::7}" "$GITHUB_REPOSITORY" "$GITHUB_REPOSITORY" "$tag" > notes.txt
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" --title "$tag" --notes-file notes.txt dist/*
+          fi
