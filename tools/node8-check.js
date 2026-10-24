@@ -324,7 +324,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   const plxCall = async (act, method) => { const x = fake('/api/plex/' + act, method || 'GET'); x.res.raw = null; await plx.handle(x.req, x.res, '/api/plex/' + act.split('?')[0], async () => ({})); x.req.url = '/api/plex/' + act; return { code: x.res.code, j: x.res.out && x.res.out[0] === '{' ? JSON.parse(x.res.out) : null, out: x.res.out }; };
   let plxR = await plxCall('status'); ok(plxR.j.state === 'off', 'Plex starts signed out');
   plxR = await plxCall('link', 'POST'); ok(plxR.j.state === 'linking' && plxR.j.code === 'AB12' && /^[0-9a-f]{24}$/.test(plxConf.plex.clientId), 'signing in shows a plex.tv/link code and keeps an id for this TV');
-  for (let i = 0; i < 30 && !(plxConf.plex && plxConf.plex.token); i++) await new Promise(r => setTimeout(r, 300));
+  for (let i = 0; i < 100 && !(plxConf.plex && plxConf.plex.token); i++) await new Promise(r => setTimeout(r, 200));   // the service asks every 3 s; a busy runner is slower
   ok(plxConf.plex.token === 'TOK' && plxConf.plex.serverToken === 'SRV' && plxConf.plex.server.name === 'Home', 'the token arrives once the code is entered, and the server is found');
   plxR = await plxCall('ondeck'); ok(plxR.j.items.length === 1 && plxR.j.items[0].title === 'Film' && plxR.j.items[0].progress === 0.5 && JSON.stringify(plxR.j).indexOf('SRV') < 0 && JSON.stringify(plxR.j).indexOf('TOK') < 0, 'On Deck comes from the server, without the token');
   const plxIx = fake('/api/plex/img?p=' + encodeURIComponent('/library/metadata/5/art/1')); await plx.handle(plxIx.req, plxIx.res, '/api/plex/img', async () => ({}));
