@@ -1,5 +1,10 @@
 # CleanYourTV for LG webOS: briefing for AI assistants
 
+> **This repository is a fork** of `lasharor/cleanyourtv-WebOS` for one TV, and is not upstream. Read `FORK-NOTES.md`
+> before acting: it names the TV, the firmware, how to reach it, how to publish a release from this repo, and how to
+> install onto that TV. Where `FORK-NOTES.md` is more specific than this file, it wins — in particular rule 7 below:
+> in *this* repository you are the maintainer, so tagging and releasing is allowed when the user asks for it.
+
 Read this first when you help someone with this project, either to find out what is wrong on their TV or to fix a bug in the code.
 The full documentation is in `docs/` (published at https://lasharor.github.io/cleanyourtv-WebOS/); the page for you is `docs/ai.md`.
 
