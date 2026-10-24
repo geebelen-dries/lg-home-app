@@ -93,10 +93,21 @@ ssh root@192.168.0.232 'luna-send -n 1 -w 30000 -f luna://com.webos.appInstallSe
   "{\"id\":\"com.cleanyourtv.manager\",\"ipkUrl\":\"/tmp/pkg.ipk\",\"subscribe\":false}" </dev/null'
 ```
 
-**D. Launcher-only change** — copy `app/index.html` to `/media/developer/cleanyourtv/app/index.html`, then
-`sh /media/developer/cleanyourtv/reload-home.sh`. Caveat: `ipk/build.py` injects `shared/flexgap.js` into every
-`index.html` at build time, so a raw copy of the source file drops the flex-gap polyfill. Harmless on webOS 11 (native
-`gap`), a regression on webOS 5/6 — prefer (C) unless you are iterating on this TV only.
+**D. Launcher-only change** — the page that is served is **not** `app/index.html`. `10-cleanyourtv-home` bind-mounts
+`home-overlay/` over LG's Home app, and `stage-home.sh` copies `app/*` into it. Editing `app/` alone changes nothing on
+screen:
+
+```sh
+cp <built>/index.html /media/developer/cleanyourtv/app/index.html
+sh /media/developer/cleanyourtv/stage-home.sh     # without this the old page keeps being served
+sh /media/developer/cleanyourtv/reload-home.sh
+```
+
+Use the **built** page (`tar -xzf dist/frontend-<v>.tgz -C /tmp` gives `app/index.html`), not the source file:
+`ipk/build.py` injects `shared/flexgap.js` into every `index.html` at build time, so a raw copy drops the flex-gap
+polyfill. Harmless on webOS 11 (native `gap`), a regression on webOS 5/6. Check the result with
+`grep -c <something new> /media/developer/cleanyourtv/home-overlay/index.html` — if the staged copy is old, the screen
+will keep showing the old page and the reload is misleading.
 
 **Undo the Home takeover:** manager app → "CleanYourTV as Home" off, or `sh /media/developer/cleanyourtv/undo-home.sh`.
 A reboot without the boot scripts also brings LG's Home back.
