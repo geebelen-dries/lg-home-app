@@ -10,7 +10,7 @@
    variable here; the service works the values out (helper/theme.js) and the defaults below are the original look. */
 :root{
   --ink:#f5f6f8; --ink2:rgba(245,246,248,.62); --night:#07080b; --night-rgb:7,8,11; --panel:#14161b; --panel2:#1a1c22; --acc:#f5f6f8; --acc-ink:#0b0c10; --focus:#f5f6f8;
-  --font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif; --fs:1; --spd:1; --glow-op:1; --wall:none;
+  --font:"LG Smart UI","Helvetica Neue",Helvetica,Arial,sans-serif; --fs:1; --spd:1; --glow-op:1; --wall:none; --bd-dim:.25;
   --pill-bg:rgba(255,255,255,.09); --pill-ring:rgba(255,255,255,.10); --pill-r:32px; --pill-h:64px; --bar-gap:16px; --menu-bg:rgba(5,6,9,.97); --row-r:30px;
   --clock-l:96px; --clock-r:auto; --clock-t:54px; --clock-b:auto; --clock-tx:none; --clock-ai:flex-start; --clock-s:1; --date-s:1; --clock-d:flex; --date-d:block;
   --bar-l:auto; --bar-r:96px; --bar-t:54px; --bar-b:auto; --bar-tx:none; --bar-d:flex;
@@ -25,6 +25,18 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:var(--night);col
 body{background-image:var(--wall);background-size:1920px 1080px}
 ::selection{background:rgba(255,255,255,.25)}
 
+/* backdrop photo (effects.backdrop): two layers cross-fade when the picture changes; darkened so text and tiles stay readable */
+.bd{position:absolute;left:0;top:0;width:1920px;height:1080px;background-size:cover;background-position:center;opacity:0;transition:opacity calc(1.2s*var(--spd)) linear}
+.bd.on{opacity:1}
+[data-backdrop=nature] .bd{will-change:opacity}
+#bdim{position:absolute;left:0;top:0;width:1920px;height:1080px;display:none;background:var(--night);opacity:var(--bd-dim);transition:opacity calc(.25s*var(--spd)) linear}
+[data-backdrop=nature].grid-open #bdim{opacity:.72}   /* the open grid darkens the whole photo, also above the grid's clip line */
+#bshade{position:absolute;left:0;top:0;width:1920px;height:1080px;display:none;
+  background:linear-gradient(180deg,rgba(var(--night-rgb),.5),rgba(var(--night-rgb),0) 22%,rgba(var(--night-rgb),0) 52%,rgba(var(--night-rgb),.55) 78%,rgba(var(--night-rgb),.8))}
+[data-backdrop=nature] #bdim,[data-backdrop=nature] #bshade{display:block}
+#credit{position:absolute;right:96px;bottom:34px;max-width:1100px;z-index:4;font-size:18px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity calc(.4s*var(--spd)) linear;pointer-events:none}
+#credit.on{opacity:.6}
+.grid-open #credit.on{opacity:0}
 .glow{position:absolute;left:0;top:0;width:1920px;height:720px;opacity:0;transition:opacity calc(.35s*var(--spd)) linear;will-change:opacity;
   background:radial-gradient(ellipse 1400px 640px at 26% -6%,rgba(var(--c),.45),transparent 70%)}
 .glow.on{opacity:var(--glow-op)}
@@ -75,20 +87,17 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 /* .in holds the picture and clips it to the corners; the tile itself does not clip, so the lift shadow and the label can sit outside it */
 .tile .in{position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .tile .cap{display:none}
-/* lift: no ring; the tile rises, a shadow drawn once fades in under it and a light sheen passes over it (opacity and transform only) */
+/* lift: no ring; the tile rises and a shadow drawn once fades in under it (opacity and transform only) */
 [data-focus=lift] .tile{transition:transform calc(.22s*var(--spd)) cubic-bezier(.2,.8,.25,1)}
 [data-focus=lift] .tile::before{content:'';position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;pointer-events:none;opacity:0;
   box-shadow:0 30px 44px -14px rgba(0,0,0,.75),0 10px 18px -6px rgba(0,0,0,.4);transition:opacity calc(.22s*var(--spd)) linear}
 [data-focus=lift] .tile.f::before{opacity:1}
-[data-focus=lift] .tile .in::after{content:'';position:absolute;left:0;top:0;bottom:0;width:55%;pointer-events:none;opacity:0;transform:translateX(-100%);
-  background:linear-gradient(105deg,rgba(255,255,255,0) 15%,rgba(255,255,255,.16) 50%,rgba(255,255,255,0) 85%)}
-[data-focus=lift] .tile.f .in::after{opacity:1;transform:translateX(190%);transition:transform calc(.8s*var(--spd)) cubic-bezier(.3,.1,.3,1) calc(.1s*var(--spd)),opacity calc(.1s*var(--spd)) linear}
 [data-focus=lift] .tile.f{outline:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,var(--tile-border))}
 /* the name of the focused app, small, under its tile */
 [data-tlabel=focus] .tile .cap{display:block;position:absolute;left:-24px;right:-24px;top:calc(100% + 16px);text-align:center;font-size:calc(24px*var(--fs));font-weight:500;line-height:1.25;
   color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity calc(.18s*var(--spd)) linear}
 [data-tlabel=focus] .tile.f .cap{opacity:1}
-.snap .tile,.snap .pill,.snap .tile.f::before,.snap .tile.f .in::after,.snap .tile .cap{transition:none}   /* held arrow key: follow the focus without animating each step */
+.snap .tile,.snap .pill,.snap .tile.f::before,.snap .tile .cap{transition:none}   /* held arrow key: follow the focus without animating each step */
 .tile.fill img{object-fit:fill}
 .tile.press{transform:scale(.96)!important;transition-duration:calc(.06s*var(--spd))}
 .tile.launching{opacity:.82}
@@ -215,7 +224,8 @@ svg.st{width:26px;height:26px;fill:#ffcc4d;flex:none}.crow.f svg.st{fill:#c98a00
 #lv-detail .up .tm{width:86px;color:var(--ink2);font-variant-numeric:tabular-nums;flex:none}
 #lv-detail .up .tt{overflow:hidden;text-overflow:ellipsis}
 </style></head><body>
-<div class="glow" id="gA"></div><div class="glow" id="gB"></div>
+<div class="bd" id="bA"></div><div class="bd" id="bB"></div><div id="bdim"></div><div id="bshade"></div>
+<div class="glow" id="gA"></div><div class="glow" id="gB"></div><div id="credit"></div>
 <div id="top"><div id="clock"><div id="time"></div><div id="date"></div></div><div id="bar"></div></div>
 <div id="shelf"><div id="name"></div></div>
 <div id="view"><div id="scroll"><div id="dock"></div><div id="grid"></div></div></div>
@@ -388,7 +398,7 @@ function glowNow(e){
 function glowSoon(e){clearTimeout(gT);gT=setTimeout(function(){glowNow(e)},110)}
 
 /* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
-var TH0={cols:10,tileH:151,gapY:26,gt:350,viewH:780,dockN:4,overlay:false,push:null,overlayH:510,glow:'',gicon:'fill',glowTop:false},TH=TH0,themeKeys=[],themeAttrs=['data-bar','data-labels','data-clock','data-grid','data-galign','data-gicon','data-focus','data-tlabel','data-glow','data-font'];
+var TH0={cols:10,tileH:151,gapY:26,gt:350,viewH:780,dockN:4,overlay:false,push:null,overlayH:510,glow:'',gicon:'fill',glowTop:false},TH=TH0,themeKeys=[],themeAttrs=['data-bar','data-labels','data-clock','data-grid','data-galign','data-gicon','data-focus','data-tlabel','data-glow','data-font','data-backdrop'];
 function applyTheme(t){
   var st=document.documentElement.style,b=document.body,k;
   for(k=0;k<themeKeys.length;k++)st.removeProperty(themeKeys[k]);themeKeys=[];
@@ -399,6 +409,22 @@ function applyTheme(t){
   if(w){var d='rgba('+t.nightRgb+','+w.dim+')';st.setProperty('--wall','linear-gradient('+d+','+d+'),url("'+API+'/api/theme/wallpaper/'+w.id+'/'+w.file+'")');themeKeys.push('--wall')}
   for(k in t.attrs)b.setAttribute('data-'+k,t.attrs[k]);
   TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,gt:t.gt||350,viewH:t.viewH||780,dockN:t.dockN||4,overlay:!!t.overlay,push:t.push||null,overlayH:t.overlayH||510,glow:t.glowRgb||'',gicon:t.attrs&&t.attrs.gicon||'fill',glowTop:!!(t.attrs&&t.attrs.glow==='top')}}
+
+/* ---------- backdrop photo: the service picks and keeps it (helper/backdrop.js); the page cross-fades to a new one once it has loaded ---------- */
+var bdFile='',bdSide=0,bdT=0;
+function backdrop(){
+  clearTimeout(bdT);
+  if(document.body.getAttribute('data-backdrop')!=='nature'){if(bdFile){bdFile='';$('bA').classList.remove('on');$('bB').classList.remove('on');$('credit').classList.remove('on')}return}
+  api('/api/backdrop').then(function(x){
+    if(x&&x.pending){bdT=setTimeout(backdrop,20000);return}
+    if(!x||!x.file||x.file===bdFile)return;
+    var src=API+'/api/backdrop/img/'+x.file,im=new Image();
+    im.onload=function(){
+      bdFile=x.file;var on=bdSide?$('bB'):$('bA'),off=bdSide?$('bA'):$('bB');bdSide^=1;
+      on.style.backgroundImage='url("'+src+'")';on.classList.add('on');off.classList.remove('on');
+      var cr=$('credit');cr.textContent=x.credit||'';cr.classList.toggle('on',!!x.credit)};
+    im.src=src}).catch(function(){bdT=setTimeout(backdrop,60000)})}
+setInterval(backdrop,30*60000);
 
 function setFocus(nr,nc,first){
   var old=rows[r]&&rows[r][c];if(old)old.classList.remove('f');
@@ -610,8 +636,8 @@ function load(){
   usage=x.usage||{};
   var rank=Object.keys(usage).sort(function(a,b){return usage[b]-usage[a]});
   var sig=JSON.stringify([x.apps.map(function(a){return a.id}),x.config,rank]);
-  if(sig===lastSig)return;lastSig=sig;
-  apps=x.apps.map(function(a){return {id:a.id,title:a.title}});cfg=x.config||{};applyTheme(cfg.theme);if(liveOn())apps.push({id:'__live',title:t('Live TV')});store();rebuild()
+  if(sig===lastSig){backdrop();return}lastSig=sig;
+  apps=x.apps.map(function(a){return {id:a.id,title:a.title}});cfg=x.config||{};applyTheme(cfg.theme);if(liveOn())apps.push({id:'__live',title:t('Live TV')});store();rebuild();backdrop()
 }).catch(function(){toast(t('Helper not reachable, retrying...'));setTimeout(load,3000)})}
 
 /* ---------- input: tap OK to open, hold OK for options ---------- */

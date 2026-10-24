@@ -33,7 +33,7 @@ folder of the GitHub repository (the `main` branch):
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
-| Lift | Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a colour wash over the top of the screen and the Inter typeface. Down moves the row up and the apps appear below it. |
+| Lift | Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a nature photo behind them that changes every few hours, and the Inter typeface. Down moves the row up and the apps appear below it. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -210,13 +210,16 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `tile.border` | 0 to 0.6 | `0` | Opacity of a thin outline on every tile. |
 | `tile.ringWidth` | 0 to 10 | `4` | Width of the focus ring, in px; 0 for none. |
 | `tile.ringOffset` | 0 to 14 | `4` | Space between a tile and its focus ring, in px. |
-| `tile.focus` | `ring`, `lift` | `ring` | `ring`: a ring around the focused tile; `lift`: no ring, the tile rises with a shadow under it and a light sheen passes over it. |
+| `tile.focus` | `ring`, `lift` | `ring` | `ring`: a ring around the focused tile; `lift`: no ring, the tile rises with a shadow under it. |
 | `tile.label` | `none`, `focus` | `none` | `focus`: the name of the focused app in small text under its tile (set `shelf.show` to false to drop the large name). |
 | **effects** | | | |
 | `effects.glow` | 0 to 1 | `1` | Strength of the ambient glow at the top. |
 | `effects.glowColor` | `app`, `accent` | `app` | `app`: taken from the focused icon; `accent`: the accent colour. |
 | `effects.glowShape` | `corner`, `top` | `corner` | `corner`: a glow from the top left; `top`: a wash across the width that fades out over the top 60% of the screen. |
 | `effects.speed` | 0 to 2 | `1` | Animation speed multiplier; 0 switches the animations off. |
+| `effects.backdrop` | `none`, `nature` | `none` | `nature`: a photo behind the home screen, one of the featured pictures of mountains, lakes, forests, waterfalls and coasts on Wikimedia Commons, with its photographer and licence shown small in a corner. The TV downloads it from Wikimedia and changes it every `effects.backdropHours`. |
+| `effects.backdropHours` | 1 to 48 | `6` | How long a backdrop photo stays before the next one, in hours. |
+| `effects.backdropDim` | 0 to 0.9 | `0.25` | How far the backdrop photo is darkened with the background colour. |
 | `effects.wallpaper` | a file name | none | A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080. |
 | `effects.wallpaperDim` | 0 to 0.9 | `0.4` | How far the wallpaper is darkened with the background colour. |
 <!-- schema:end -->

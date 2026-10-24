@@ -1,7 +1,7 @@
 {
  "name": "Lift",
  "author": "CleanYourTV",
- "description": "Wide 16:9 tiles, five to a row, that lift with a soft shadow when focused, the app's name in small text under it, a colour wash over the top of the screen and the Inter typeface.",
+ "description": "Wide 16:9 tiles that lift on focus, small names, a nature photo from Wikimedia Commons behind them and Inter. Down shows the other apps.",
  "colors": {
   "night": "#08090c",
   "panel": "#1c1d22",
@@ -22,8 +22,8 @@
   "y": 58
  },
  "bar": {
-  "style": "round",
-  "size": 56,
+  "style": "pill",
+  "size": 60,
   "gap": 14
  },
  "shelf": {
@@ -57,7 +57,7 @@
   "focusScale": 1.1,
   "lift": 8,
   "icon": "center",
-  "overlayDim": 0.7
+  "overlayDim": 0
  },
  "tile": {
   "focus": "lift",
@@ -65,7 +65,10 @@
   "ringWidth": 0
  },
  "effects": {
-  "glow": 1,
-  "glowShape": "top"
+  "glow": 0.3,
+  "glowShape": "top",
+  "backdrop": "nature",
+  "backdropHours": 6,
+  "backdropDim": 0.2
  }
 }

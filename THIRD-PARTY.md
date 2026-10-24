@@ -57,6 +57,15 @@ theme sets `type.font` to `inter`. SHA-256:
 | `inter-500.woff2` | `f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f` |
 | `inter-600.woff2` | `f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a` |
 
+## Backdrop photos (Wikimedia Commons)
+
+Themes with `effects.backdrop` set to `nature` (Lift) show a photo behind the home screen. No photo is shipped: the service downloads one
+of the [featured pictures](https://commons.wikimedia.org/wiki/Commons:Featured_pictures) of mountains, lakes, forests, waterfalls and coasts
+from Wikimedia Commons (`helper/backdrop.js`), and the launcher shows the photographer and the licence (mostly CC BY-SA) with it, as
+those licences ask. The screenshot `themes/lift/preview.jpg` contains
+[Lindenstumpf, Panorama, 2](https://commons.wikimedia.org/wiki/File:Lindenstumpf,_Panorama,_2.jpg) by Rainer Lippert, released into the
+public domain.
+
 ## Design
 
 The home-screen design follows the Android TV project [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (MIT).

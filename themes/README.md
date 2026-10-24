@@ -47,8 +47,9 @@ Folder: [`bloom/`](bloom/)
 
 ### Lift
 
-Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a colour wash over the
-top of the screen and the Inter typeface. Down moves the row up and the apps appear below it.
+Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a nature photo behind them
+and the Inter typeface. Down moves the row up and the apps appear below it. The photo is one of the featured pictures of mountains, lakes,
+forests, waterfalls and coasts on Wikimedia Commons; the TV downloads a new one every six hours and shows its photographer and licence.
 
 [![Lift](lift/preview.jpg)](lift/preview.jpg)
 

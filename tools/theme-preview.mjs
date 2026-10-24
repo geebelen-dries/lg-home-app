@@ -22,6 +22,12 @@ let base = null; const baseId = id !== 'classic' ? (JSON.parse(fs.readFileSync(p
 if (baseId && baseId !== 'classic' && fs.existsSync(path.join(ROOT, 'themes', baseId))) fs.cpSync(path.join(ROOT, 'themes', baseId), path.join(store, baseId), { recursive: true });
 process.env.CYTV_THEMES = store;
 const theme = require(path.join(ROOT, 'helper', 'theme.js')).create({ readConf: () => ({ theme: { id } }), writeConf() {}, noStartup: true });
+// a theme with a backdrop photo gets a real one from Wikimedia Commons, as the TV would; the screenshot that goes into the repository uses a
+// public-domain featured picture, so preview.jpg needs no licence of its own (THIRD-PARTY.md names it)
+if (!process.env.CYTV_BACKDROP_PICK) process.env.CYTV_BACKDROP_PICK = 'File:Lindenstumpf, Panorama, 2.jpg';
+process.env.CYTV_BACKDROP_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'cytv-backdrop-'));
+const backdrop = require(path.join(ROOT, 'helper', 'backdrop.js')).create({ active: () => theme.resolved().attrs.backdrop === 'nature', hours: () => 6 });
+if (theme.resolved().attrs.backdrop === 'nature') { backdrop.current(); await backdrop.prefetch(); backdrop.current(); }
 
 // made-up apps with plain coloured icons
 const NAMES = ['Streaming', 'Video', 'Music', 'Photos', 'Games', 'Browser', 'News', 'Weather', 'Sports', 'Movies', 'Kids', 'Radio', 'Podcasts', 'Maps', 'Cooking', 'Fitness', 'Calendar', 'Notes', 'Files', 'Camera', 'Settings', 'Store'];
@@ -37,6 +43,7 @@ const srv = http.createServer(async (q, r) => {
   const fm = /^\/(inter-\d00\.woff2)$/.exec(u);   // the fonts the page loads next to itself
   if (fm) { r.writeHead(200, { 'content-type': 'font/woff2' }); return r.end(fs.readFileSync(path.join(ROOT, 'app', fm[1]))); }
   if (u.startsWith('/api/theme/')) return theme.handle(q, r, u, body);
+  if (u.startsWith('/api/backdrop')) return backdrop.handle(q, r, u);
   if (u === '/api/apps') return j({ apps: apps.map(a => ({ id: a.id, title: a.title })), config: { dock: apps.slice(0, 6).map(a => a.id), theme: theme.resolved() }, usage: Object.fromEntries(apps.map((a, i) => [a.id, 1000 - i])), version: '9.9.9' });
   if (u === '/api/inputs') return j({ devices: [{ hdmiPlugIn: true, label: 'Game console', port: 1, appId: 'hdmi1', activate: false }, { hdmiPlugIn: false, label: 'HDMI 2', port: 2, appId: 'hdmi2', activate: false }] });
   const m = /^\/icon\/(app\.\d+)$/.exec(u), a = m && apps.find(x => x.id === m[1]);
@@ -47,7 +54,7 @@ await new Promise((res, rej) => { srv.on('error', rej); srv.listen(8765, '127.0.
 
 const port = 9700 + Math.floor(Math.random() * 200), sleep = ms => new Promise(r => setTimeout(r, ms));
 const chrome = spawn(chromePath, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--remote-debugging-port=' + port, '--user-data-dir=' + fs.mkdtempSync(path.join(os.tmpdir(), 'cytv-chrome-')), '--window-size=1920,1080', 'about:blank'], { stdio: 'ignore' });
-const done = code => { try { chrome.kill(); } catch (_) {} srv.close(); fs.rmSync(store, { recursive: true, force: true }); process.exit(code); };
+const done = code => { try { chrome.kill(); } catch (_) {} srv.close(); fs.rmSync(store, { recursive: true, force: true }); fs.rmSync(process.env.CYTV_BACKDROP_DIR, { recursive: true, force: true }); process.exit(code); };
 try {
   let tabs; for (let i = 0; i < 80; i++) { try { tabs = await (await fetch('http://127.0.0.1:' + port + '/json')).json(); if (tabs.find(t => t.type === 'page')) break; } catch (_) {} await sleep(250); }
   const ws = new WebSocket(tabs.find(t => t.type === 'page').webSocketDebuggerUrl); await new Promise(r => ws.addEventListener('open', r));

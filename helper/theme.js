@@ -97,12 +97,15 @@ const SCHEMA = [
   ['tile.border', 'num', [0, 0.6], 0, 'Opacity of a thin outline on every tile.'],
   ['tile.ringWidth', 'int', [0, 10], 4, 'Width of the focus ring, in px; 0 for none.'],
   ['tile.ringOffset', 'int', [0, 14], 4, 'Space between a tile and its focus ring, in px.'],
-  ['tile.focus', 'enum', ['ring', 'lift'], 'ring', '`ring`: a ring around the focused tile; `lift`: no ring, the tile rises with a shadow under it and a light sheen passes over it.'],
+  ['tile.focus', 'enum', ['ring', 'lift'], 'ring', '`ring`: a ring around the focused tile; `lift`: no ring, the tile rises with a shadow under it.'],
   ['tile.label', 'enum', ['none', 'focus'], 'none', '`focus`: the name of the focused app in small text under its tile (set `shelf.show` to false to drop the large name).'],
   ['effects.glow', 'num', [0, 1], 1, 'Strength of the ambient glow at the top.'],
   ['effects.glowColor', 'enum', ['app', 'accent'], 'app', '`app`: taken from the focused icon; `accent`: the accent colour.'],
   ['effects.glowShape', 'enum', ['corner', 'top'], 'corner', '`corner`: a glow from the top left; `top`: a wash across the width that fades out over the top 60% of the screen.'],
   ['effects.speed', 'num', [0, 2], 1, 'Animation speed multiplier; 0 switches the animations off.'],
+  ['effects.backdrop', 'enum', ['none', 'nature'], 'none', '`nature`: a photo behind the home screen, one of the featured pictures of mountains, lakes, forests, waterfalls and coasts on Wikimedia Commons, with its photographer and licence shown small in a corner. The TV downloads it from Wikimedia and changes it every `effects.backdropHours`.'],
+  ['effects.backdropHours', 'int', [1, 48], 6, 'How long a backdrop photo stays before the next one, in hours.'],
+  ['effects.backdropDim', 'num', [0, 0.9], 0.25, 'How far the backdrop photo is darkened with the background colour.'],
   ['effects.wallpaper', 'file', null, '', 'A file name in `themes/wallpapers/`: `.jpg`, `.png` or `.webp`, at most 1.5 MB; drawn at 1920 x 1080.'],
   ['effects.wallpaperDim', 'num', [0, 0.9], 0.4, 'How far the wallpaper is darkened with the background colour.'],
 ];
@@ -236,13 +239,13 @@ function resolve(t, accent) {
     '--cols': String(v['grid.cols']), '--tile-h': px(v['grid.tileH']), '--gap-x': px(v['grid.gapX']), '--gap-y': px(v['grid.gapY']), '--tile-r': px(v['grid.radius']), '--grid-l': px(v['grid.x']), '--grid-w': px(v['grid.width']),
     '--grid-t': px(gridY - viewTop), '--tile-w': px(Math.floor((v['grid.width'] - (v['grid.cols'] - 1) * v['grid.gapX']) / v['grid.cols'])), '--grid-fs': String(v['grid.focusScale']), '--grid-lift': px(-v['grid.lift']), '--ov-dim': String(v['grid.overlayDim']),
     '--gloss': String(v['tile.gloss']), '--tile-border': String(v['tile.border']), '--ring-w': px(v['tile.ringWidth']), '--ring-off': px(v['tile.ringOffset']),
-    '--glow-op': String(v['effects.glow']), '--spd': String(v['effects.speed']),
+    '--glow-op': String(v['effects.glow']), '--bd-dim': String(v['effects.backdropDim']), '--spd': String(v['effects.speed']),
   };
   const w = v['effects.wallpaper'];
   return {
     id: t.id, name: t.name, vars,
-    attrs: { bar: v['bar.style'], labels, clock: v['clock.layout'], grid: mode, galign: v['grid.align'], gicon: v['grid.icon'], focus: v['tile.focus'], tlabel: v['tile.label'], glow: v['effects.glowShape'], font: v['type.font'] },
-    cols: v['grid.cols'], tileH: v['grid.tileH'], gapY: v['grid.gapY'], gt: gridY - viewTop, viewH: 1080 - viewTop, dockN: v['dock.count'], overlay, push: push ? { up: Math.max(0, dockTop - v['grid.dockUp']), gridTop: gridY } : null, overlayH: v['grid.overlayH'],
+    attrs: { bar: v['bar.style'], labels, clock: v['clock.layout'], grid: mode, galign: v['grid.align'], gicon: v['grid.icon'], focus: v['tile.focus'], tlabel: v['tile.label'], glow: v['effects.glowShape'], font: v['type.font'], backdrop: v['effects.backdrop'] },
+    cols: v['grid.cols'], tileH: v['grid.tileH'], gapY: v['grid.gapY'], gt: gridY - viewTop, viewH: 1080 - viewTop, dockN: v['dock.count'], overlay, push: push ? { up: Math.max(0, dockTop - v['grid.dockUp']), gridTop: gridY } : null, overlayH: v['grid.overlayH'], backdropHours: v['effects.backdropHours'],
     glowRgb: v['effects.glowColor'] === 'accent' ? rgb(A).join(',') : '', nightRgb: night.join(','), wallpaper: w ? { id: t.id, file: w, dim: v['effects.wallpaperDim'] } : null,
   };
 }

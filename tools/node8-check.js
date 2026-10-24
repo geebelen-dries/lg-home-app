@@ -274,6 +274,33 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   // the service ships no themes
   ok(!/themes/.test(fs.readFileSync(path.join(root, 'ipk', 'build.py'), 'utf8').replace(/#.*$/gm, '')) && !/themes/.test(fs.readFileSync(path.join(root, 'scripts', 'bootstrap.sh'), 'utf8').replace(/#.*$/gm, '')), 'the package build and the setup do not ship or copy themes');
 
+  // 9b. The backdrop photo: picked from Wikimedia Commons' featured nature pictures (a stand-in here), only wide pictures with a licence,
+  // served by its own name only, and nothing fetched while the theme does not use it
+  const bdMod = require(path.join(helper, 'backdrop'));
+  ok(bdMod.plain('<a href="//commons.wikimedia.org/wiki/User:X">Jane &amp; Doe</a>') === 'Jane & Doe' && bdMod.credit({ extmetadata: { Artist: { value: '<b>Jo</b>' }, LicenseShortName: { value: 'CC BY-SA 4.0' } } }) === 'Jo \u00B7 CC BY-SA 4.0 \u00B7 Wikimedia Commons' && bdMod.credit({ extmetadata: { Artist: { value: 'Jo' } } }) === '', 'a backdrop credit is plain text, and a picture without a licence gets none');
+  const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(64, 1)]), bdHits = [];
+  const wm = http.createServer((q, rq) => {
+    const full = q.url, send = (b, t) => { rq.writeHead(200, { 'content-type': t || 'application/json' }); rq.end(b); }; bdHits.push(full);
+    if (/^\/thumb\//.test(full)) return send(jpeg, 'image/jpeg');
+    if (/list=categorymembers/.test(full)) return send(JSON.stringify({ query: { categorymembers: /mountains/.test(full) ? [{ title: 'File:Narrow.jpg' }, { title: 'File:Wide.jpg' }] : [] } }));
+    const narrow = /Narrow/.test(decodeURIComponent(full)), base = 'http://127.0.0.1:' + wm.address().port;
+    send(JSON.stringify({ query: { pages: [{ imageinfo: [{ width: narrow ? 2000 : 4000, height: narrow ? 3000 : 2400, thumburl: base + '/thumb/' + (narrow ? 'n' : 'w') + '.jpg', extmetadata: { Artist: { value: '<a>Jo</a>' }, LicenseShortName: { value: 'CC0' } } }] }] } }));
+  }).listen(0, '127.0.0.1');
+  await new Promise(r => wm.on('listening', r));
+  process.env.CYTV_BACKDROP_URL = 'http://127.0.0.1:' + wm.address().port + '/w/api.php'; process.env.CYTV_BACKDROP_DIR = path.join(tmp, 'backdrop');
+  let bdOn = false; const bd = bdMod.create({ active: () => bdOn, hours: () => 1 });
+  const bget = async u => { const x = fake(u, 'GET'); x.res.raw = null; await bd.handle(x.req, x.res, u); return { code: x.res.code, j: x.res.out && x.res.out[0] === '{' ? JSON.parse(x.res.out) : null, out: x.res.out }; };
+  let br = await bget('/api/backdrop'); ok(br.j && br.j.off === true && bdHits.length === 0, 'a theme without a backdrop fetches nothing');
+  bdOn = true; br = await bget('/api/backdrop'); ok(br.j && br.j.pending === true, 'the first request starts the download and says it is pending');
+  await bd.prefetch(); br = await bget('/api/backdrop');
+  const f1 = br.j && br.j.file;
+  ok(/^bd-\d+\.jpg$/.test(f1 || '') && br.j.credit === 'Jo \u00B7 CC0 \u00B7 Wikimedia Commons' && bdHits.some(h => /\/thumb\/w\.jpg/.test(h)) && !bdHits.some(h => /\/thumb\/n\.jpg/.test(h)), 'a wide picture is downloaded with its credit; a tall one is skipped');
+  br = await bget('/api/backdrop/img/' + f1); ok(br.code === 200, 'the picture is served by its name');
+  br = await bget('/api/backdrop/img/bd-123456789.jpg'); const br2 = await bget('/api/backdrop/img/..%2fstate.json'); ok(br.code === 404 && br2.code === 404, 'other files are not served');
+  await bd.prefetch(); bd.state().cur.at = Date.now() - 2 * 3600000; br = await bget('/api/backdrop');
+  ok(br.j.file && br.j.file !== f1 && !fs.existsSync(path.join(tmp, 'backdrop', f1)), 'after the set hours the next picture takes over and the old file is removed');
+  await bd.prefetch(); wm.close(); delete process.env.CYTV_BACKDROP_URL; delete process.env.CYTV_BACKDROP_DIR;
+
   // 10. The picker keepalive stops when the system keeps closing the hidden picker (issue 5)
   const pickerMod = require(path.join(helper, 'picker'));
   let pkClock = 1000, pkLaunches = 0, pkRunning = [], pkSaved = {};

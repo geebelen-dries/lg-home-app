@@ -97,6 +97,9 @@ let theme = null;
 try { theme = require('./theme').create({ readConf, writeConf, slug: () => { try { const x = fs.readFileSync(DIR + '/source', 'utf8').trim().split(/\s+/)[0]; if (/^[\w.-]+\/[\w.-]+$/.test(x)) return x; } catch (_) {} return 'lasharor/cleanyourtv-WebOS'; },
     // the branch of the themes folder: main, unless D/source names another one after the repository (only to try a theme before it is merged)
     ref: () => { try { const x = fs.readFileSync(DIR + '/source', 'utf8').trim().split(/\s+/)[1]; if (/^[\w.\/-]{1,60}$/.test(x || '')) return x; } catch (_) {} return 'main'; } }); } catch (e) { console.error('theme module failed:', e.message); }
+// the photo behind the home screen, for themes that ask for one (effects.backdrop)
+let backdrop = null;
+try { backdrop = require('./backdrop').create({ active: () => !!theme && theme.resolved().attrs.backdrop === 'nature', hours: () => theme ? theme.resolved().backdropHours : 6 }); } catch (e) { console.error('backdrop module failed:', e.message); }
 inputhook.setGuideKey && inputhook.setGuideKey(guideKey);
 let notifyApi = null;
 try { if (notify) notifyApi = require('./notifyapi').create({ notify, readConf, writeConf }); } catch (e) { console.error('notification api module failed:', e.message); }
@@ -124,6 +127,7 @@ http.createServer(async (req, res) => {
     if (voice && u.startsWith('/api/voice/')) return voice.handle(req, res, u, body);
     if (live && u.startsWith('/api/live/')) return live.handle(req, res, u, body);
     if (theme && u.startsWith('/api/theme/')) return theme.handle(req, res, u, body);
+    if (backdrop && u.startsWith('/api/backdrop')) return backdrop.handle(req, res, u);
     if (u === '/api/log') { const lm = decodeURIComponent(req.url.split('m=')[1] || ''); if (/picker show/.test(lm)) pickerShownAt = Date.now(); if (/picker close/.test(lm)) setTimeout(closePicker, 400); console.log(fs.readFileSync('/proc/uptime', 'utf8').split(' ')[0] + ' ' + decodeURIComponent((req.url.split('m=')[1] || '')).slice(0, 300)); return json({}); }   // small diagnostics from the overlay apps
     if (manager && u.startsWith('/api/manager/')) return manager.handle(req, res, u, body);
     if (u === '/api/frontend-ok' && req.method === 'POST') { const b = await body(req); if (manager) manager.frontendLoaded(String(b.version || '')); return json({ returnValue: true }); }
