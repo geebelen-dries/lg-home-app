@@ -2,7 +2,7 @@
 //   node tools/node8-check.js
 // It parses every service file, loads the modules and runs the parts that used APIs Node 8 lacks (pairing code, URL and
 // form handling, outgoing http requests, mkdir -p) against a local server. Nothing leaves this machine.
-const fs = require('fs'), os = require('os'), path = require('path'), http = require('http'), cp = require('child_process');
+const fs = require('fs'), os = require('os'), path = require('path'), http = require('http'), cp = require('child_process'), vm = require('vm');
 const root = path.join(__dirname, '..'), helper = path.join(root, 'helper');
 let failed = 0;
 const ok = (c, name) => { console.log((c ? 'ok   ' : 'FAIL ') + name); if (!c) failed++; };
@@ -332,6 +332,24 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   // 14. The favourite star and the menus' right-hand text both had the class st: the star's 26 px width squeezed the menu text into a column
   const launcherHtml = fs.readFileSync(path.join(root, 'app', 'index.html'), 'utf8');
   ok(!/(^|\n)\.st\{/.test(launcherHtml) && /svg\.st\{width:26px/.test(launcherHtml), 'the favourite star is styled as svg.st, so the menu\'s .st text keeps its natural width');
+  // 14b. A dock entry may be an external input ("input:HDMI_3") next to the plain app ids. The helpers that resolve one are
+  // marked in the page so they can be run here, without a browser: see the input-dock-start/end comments in app/index.html.
+  const dockStart = launcherHtml.indexOf('/* input-dock-start */'), dockEnd = launcherHtml.indexOf('/* input-dock-end */');
+  ok(dockStart > 0 && dockEnd > dockStart, 'the dock entry helpers are marked, so they can be run outside the browser');
+  const dockCtx = {}; vm.createContext(dockCtx);
+  vm.runInContext(launcherHtml.slice(dockStart, dockEnd), dockCtx);
+  const hdmi3 = { id: 'HDMI_3', port: 3, label: 'TelenetTV Box', appId: 'com.webos.app.hdmi3', hdmiPlugIn: true };
+  ok(dockCtx.isInputEntry('input:HDMI_3') && !dockCtx.isInputEntry('netflix') && !dockCtx.isInputEntry(null) && !dockCtx.isInputEntry(42), 'only a string with the input: prefix is an input dock entry');
+  const a3 = dockCtx.inputApp('input:HDMI_3', [hdmi3], true);
+  ok(a3 && a3.appId === 'com.webos.app.hdmi3' && a3.title === 'TelenetTV Box' && a3.input === true, 'an input entry resolves to the device it names, with the name the TV shows for it');
+  ok(dockCtx.inputApp('input:HDMI_3', [], true) === null, 'an input the TV no longer lists drops out of the dock instead of leaving a dead tile');
+  const early = dockCtx.inputApp('input:HDMI_3', [], false);
+  ok(early && early.title === 'HDMI 3' && early.appId === '', 'before the input list arrives the entry keeps its place and shows the port');
+  ok(dockCtx.inputApp('netflix', [hdmi3], true) === null, 'an app id is never resolved as an input');
+  const unlabelled = dockCtx.inputApp('input:HDMI_4', [{ id: 'HDMI_4', port: 4, label: '', appId: 'com.webos.app.hdmi4' }], true);
+  ok(unlabelled && unlabelled.title === 'HDMI 4', 'an input with no name of its own is shown by its port');
+  ok(/if\(a\.input\)\{/.test(launcherHtml) && /launch\(a\.appId\|\|a\.id\)/.test(launcherHtml), 'an input tile draws the HDMI glyph and opens the input app, not the entry id');
+  ok(/function title\(id\)\{if\(isInputEntry\(id\)\)/.test(launcherHtml), 'the "replace which app?" list names an input entry by its own name');
   // 15. The QR code in the manager opens a short-lived page on the TV that shows the notification address and token
   const freePort = await new Promise(res => { const x = http.createServer(); x.listen(0, '127.0.0.1', () => { const pp = x.address().port; x.close(() => res(pp)); }); });
   let nconf = { notifyApi: { enabled: false, port: freePort, token: '', allow: [] } };

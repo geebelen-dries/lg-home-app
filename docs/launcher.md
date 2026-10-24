@@ -37,9 +37,14 @@ The Magic Remote pointer works too: pointing and clicking, and holding the butto
 - **hidden apps** (show them again),
 - the **app order** (most used first, or A to Z),
 - the **clock** format (automatic, 12 or 24 hour),
+- **an input in the dock** (Customise → Dock → **An input...**),
 - **Reset customisation**.
 
 The dock holds up to four apps. Hold OK on an app and choose **Add to dock**, **Move left**, **Move right** or **Remove from dock**.
+
+An HDMI input can sit in the dock too. **Customise → Dock → An input...** pins one: the tile shows the HDMI glyph and the
+name the TV gives that input, and OK opens it. It moves and is removed like an app tile (hold OK). If the TV stops listing
+the input, the tile goes away by itself.
 
 ## Inputs
 
@@ -72,7 +77,7 @@ Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:
 
 | Key | Meaning |
 |---|---|
-| `dock` | App ids in the dock (up to four). |
+| `dock` | App ids in the dock, and `input:<id>` for an external input (`input:HDMI_3`), up to four. |
 | `topbar` | The buttons at the top. |
 | `hidden` | App ids you hid. |
 | `sort` | `usage` or `alpha`. |
