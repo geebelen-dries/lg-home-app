@@ -44,6 +44,9 @@ const srv = http.createServer(async (q, r) => {
   if (fm) { r.writeHead(200, { 'content-type': 'font/woff2' }); return r.end(fs.readFileSync(path.join(ROOT, 'app', fm[1]))); }
   if (u.startsWith('/api/theme/')) return theme.handle(q, r, u, body);
   if (u.startsWith('/api/backdrop')) return backdrop.handle(q, r, u);
+  // made-up Plex On Deck cards, for themes that show the row
+  if (u === '/api/plex/ondeck') return j({ items: ['Mountain Diaries', 'The Long Coast', 'Night Trains', 'Small Kitchens', 'Glacier'].map((t, i) => ({ key: String(100 + i), title: t, sub: i % 2 ? '2019' : 'S2 \u00B7 E' + (i + 3) + ' \u00B7 Part ' + (i + 1), progress: [0.3, 0.7, 0.15, 0.5, 0.85][i], img: '/library/metadata/' + (100 + i) + '/thumb/1' })) });
+  if (u === '/api/plex/img') { const k = +((/metadata%2F(\d+)/.exec(q.url) || [])[1] || 100) - 100; r.writeHead(200, { 'content-type': 'image/svg+xml' }); return r.end(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${k * 67 + 20},45%,38%)"/><stop offset="1" stop-color="hsl(${k * 67 + 60},50%,18%)"/></linearGradient></defs><rect width="640" height="360" fill="url(#g)"/></svg>`); }
   if (u === '/api/apps') return j({ apps: apps.map(a => ({ id: a.id, title: a.title })), config: { dock: apps.slice(0, 6).map(a => a.id), theme: theme.resolved() }, usage: Object.fromEntries(apps.map((a, i) => [a.id, 1000 - i])), version: '9.9.9' });
   if (u === '/api/inputs') return j({ devices: [{ hdmiPlugIn: true, label: 'Game console', port: 1, appId: 'hdmi1', activate: false }, { hdmiPlugIn: false, label: 'HDMI 2', port: 2, appId: 'hdmi2', activate: false }] });
   const m = /^\/icon\/(app\.\d+)$/.exec(u), a = m && apps.find(x => x.id === m[1]);

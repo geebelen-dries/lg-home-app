@@ -17,7 +17,7 @@
   --name-d:block; --name-x:96px; --name-y:150px; --name-a:left; --name-s:1;
   --view-top:300px; --dock-l:96px; --dock-r:auto; --dock-t:60px; --dock-b:auto; --dock-tx:none; --dock-w:408px; --dock-h:230px; --dock-gap:32px; --dock-rad:36px;
   --dock-panel:0; --dock-pad:0px; --dock-lift:-10px; --dock-fs:1.05;
-  --cols:10; --tile-w:151px; --tile-h:151px; --gap-x:24px; --gap-y:26px; --tile-r:34px; --grid-l:96px; --grid-w:1728px; --grid-t:350px; --grid-fs:1.12; --grid-lift:0px; --ov-dim:.95;
+  --cols:10; --tile-w:151px; --tile-h:151px; --gap-x:24px; --gap-y:26px; --tile-r:34px; --grid-l:96px; --grid-w:1728px; --grid-t:350px; --grid-fs:1.12; --grid-lift:0px; --icon-h:56%; --icon-w:46%; --deck-t:140px; --ov-dim:.95;
   --gloss:0; --tile-border:0; --ring-w:4px; --ring-off:4px;
 }
 *{box-sizing:border-box;margin:0}
@@ -106,21 +106,33 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 .tile .t{font-size:calc(26px*var(--fs));font-weight:600;padding:12px;text-align:center;line-height:1.15;opacity:.9}
 .tile.f{z-index:3;outline:var(--ring-w) solid var(--focus);outline-offset:var(--ring-off);box-shadow:0 24px 36px rgba(0,0,0,.6)}
 #dock .tile{width:var(--dock-w);height:var(--dock-h);border-radius:var(--dock-rad)}
-#dock .tile img{height:56%;max-width:46%}
+#dock .tile img{height:var(--icon-h);max-width:var(--icon-w)}
 #dock .tile svg{width:96px;height:96px}
 #dock .tile.f{transform:translateY(var(--dock-lift)) scale(var(--dock-fs))}
 #grid .tile{height:var(--tile-h);border-radius:var(--tile-r)}
 #grid .tile img{width:64%;height:64%}
 #grid .tile svg{width:64px;height:64px}
 #grid .tile.f{transform:translateY(var(--grid-lift)) scale(var(--grid-fs))}
-[data-gicon=center] #grid .tile img{width:auto;height:56%;max-width:46%}
+[data-gicon=center] #grid .tile img{width:auto;height:var(--icon-h);max-width:var(--icon-w)}
 #grid .tile.sys .in{flex-direction:column;gap:8px}
 .slab{font-size:22px;font-weight:600;color:var(--ink2)}
 #grid .tile.sys{background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
 /* an external input in the dock: the HDMI glyph over the name the TV shows for that input */
 #dock .tile.ext .in{flex-direction:column;gap:10px}
 #dock .tile.ext .slab{max-width:88%;font-size:20px;line-height:1.2;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-[data-tlabel=focus] .tile.ext .slab{display:none}   /* the label under the tile already names the input */
+[data-tlabel=focus] .tile.ext .slab{display:none}
+/* an input with its own picture (config.json inputIcons): drawn like an app logo on its own colour */
+#dock .tile.pic img{width:80%;height:auto;max-width:80%;max-height:var(--icon-h);object-fit:contain}
+/* Plex On Deck: a row of cards above the dock (theme ondeck.show), moved away with the dock when the grid opens */
+#deck{position:absolute;left:var(--grid-l);top:var(--deck-t);width:var(--grid-w);display:none;z-index:3}
+[data-deck=show] #deck.on{display:block}
+#deck .dh{font-size:calc(24px*var(--fs));font-weight:600;margin:0 0 18px 4px;opacity:.9;text-shadow:0 1px 10px rgba(0,0,0,.55)}
+#deckrow{display:flex}
+#deck .tile{flex:none;width:262px;height:148px;margin-right:30px;border-radius:var(--tile-r);background:#15161a}
+#deck .tile .in img{width:100%;height:100%;object-fit:cover}
+#deck .tile .pb{position:absolute;left:14px;right:14px;bottom:12px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);overflow:hidden}
+#deck .tile .pb i{display:block;height:100%;background:#fff}
+#deck .tile.f{transform:translateY(var(--grid-lift)) scale(var(--grid-fs))}   /* the label under the tile already names the input */
 
 /* Inter is set lighter than the TV's own face */
 [data-font=inter] #time{font-weight:500;letter-spacing:-.01em}
@@ -228,7 +240,7 @@ svg.st{width:26px;height:26px;fill:#ffcc4d;flex:none}.crow.f svg.st{fill:#c98a00
 <div class="glow" id="gA"></div><div class="glow" id="gB"></div><div id="credit"></div>
 <div id="top"><div id="clock"><div id="time"></div><div id="date"></div></div><div id="bar"></div></div>
 <div id="shelf"><div id="name"></div></div>
-<div id="view"><div id="scroll"><div id="dock"></div><div id="grid"></div></div></div>
+<div id="view"><div id="scroll"><div id="deck"><div class="dh">On Deck</div><div id="deckrow"></div></div><div id="dock"></div><div id="grid"></div></div></div>
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="facts" id="lv-ofacts"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><input id="lv-search" type="text" autocomplete="off"><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-filter" class="layer"></div><div id="lv-menu" class="layer"></div><div id="lv-msg" class="layer"></div><div id="lv-tune" class="layer"></div><div id="lv-toast" class="layer"></div><div id="lv-stats" class="layer"></div></div>
 <div id="toast"></div>
 <script>
@@ -287,6 +299,7 @@ function clockOpts(){var c=cfg.clock,o={hour:'numeric',minute:'2-digit'};if(c===
 
 var apps=[], cfg={}, usage={}, warned=false, rows=[], r=1, c=0, colors={}, tiles={}, lastSig='', gSide=0, gColor='', gT=0, saveT=0;
 var inputs=[], inputsLoaded=false, inputsSig='';
+var DK=1, G=2, deckItems=[], deckSig='', PLEX_APP='cdp-30';   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
 function $(id){return document.getElementById(id)}
 var toastT;
 function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},4000)}
@@ -356,7 +369,7 @@ function fit(d,dock){
   i.removeAttribute('style');d.classList.remove('fill');d.style.background='';
   if(!c||c.k!=='pad'||!c.box)return;
   var bx=c.box,bw=bx[2]-bx[0],bh=bx[3]-bx[1],s=i.style;
-  if(dock){s.height=(56/bh)+'%';s.maxWidth='none';s.width='auto';
+  if(dock){s.height=(TH.iconH/bh)+'%';s.maxWidth='none';s.width='auto';
     // a gradient picture: the tile takes the same gradient between the picture's top and bottom edges, so no square shows
     if(c.gt&&c.gb&&Math.abs(c.gt[0]-c.gb[0])+Math.abs(c.gt[1]-c.gb[1])+Math.abs(c.gt[2]-c.gb[2])>40)d.style.background='linear-gradient(rgb('+c.gt.join(',')+') 22%,rgb('+c.gb.join(',')+') 78%)';
     return}
@@ -368,6 +381,7 @@ function paint(d,col){d.style.setProperty('--c',col.c.join(','));d.style.setProp
 function tile(a){
   if(tiles[a.id]){   /* an input tile may have been built before its device arrived (placeholder name, no app id): refresh it */
     var done=tiles[a.id];
+    if(a.deck){done._a=a;done._cap.textContent=deckCap(a.deck);done._pb.style.width=Math.round(a.deck.progress*100)+'%';return done}
     if(a.input&&done._a&&done._a.title!==a.title){done._a=a;if(done._slab)done._slab.textContent=a.title;done._cap.textContent=a.title}
     return done}
   /* .in holds the picture (and clips it), .cap is the small name under the tile that some themes show on focus */
@@ -376,6 +390,15 @@ function tile(a){
   var cap=document.createElement('div');cap.className='cap';cap.textContent=a.sys?'LG Home':a.title;d.appendChild(cap);d._cap=cap;
   tiles[a.id]=d;hit(d);
   if(a.sys){n.innerHTML=svg(a.icon)+'<div class="slab">'+'LG Home'+'</div>';return d}
+  if(a.deck){   /* a Plex On Deck card: the picture through the service, the progress, the title under it */
+    cap.textContent=deckCap(a.deck);d.className+=' card';
+    if(a.deck.img){var di=new Image();di.alt='';di.decoding='async';di.src=API+'/api/plex/img?p='+encodeURIComponent(a.deck.img);n.appendChild(di)}
+    var pb=document.createElement('div');pb.className='pb';pb.innerHTML='<i></i>';d.appendChild(pb);d._pb=pb.firstChild;d._pb.style.width=Math.round(a.deck.progress*100)+'%';return d}
+  var ic=a.input&&(cfg.inputIcons||{})[inputIdOf(a.id)];
+  if(ic&&ic.file){   /* an input with its own picture (config.json inputIcons), on its own colour */
+    d.className+=' ext pic';var bg=/^#[0-9a-f]{6}$/i.test(ic.bg||'')?ic.bg:'#ffffff',bgc=[1,3,5].map(function(i){return parseInt(bg.slice(i,i+2),16)});
+    paint(d,{c:hsl2rgb(hashHue(a.id),.42,.42),b:bgc});
+    var pi=new Image();pi.alt='';pi.decoding='async';pi.src=API+'/api/input-icon/'+encodeURIComponent(inputIdOf(a.id))+'?v='+encodeURIComponent(ic.file);n.appendChild(pi);return d}
   if(a.input){   /* an external input: the HDMI glyph and the name the TV shows for it, not an app icon */
     d.className+=' ext';var ih=hsl2rgb(hashHue(a.id),.42,.42);paint(d,{c:ih,b:hsl2rgb(hashHue(a.id),.4,.2)});
     n.innerHTML=svg(a.icon);var sl=document.createElement('div');sl.className='slab';sl.textContent=a.title;n.appendChild(sl);d._slab=sl;return d}
@@ -398,7 +421,7 @@ function glowNow(e){
 function glowSoon(e){clearTimeout(gT);gT=setTimeout(function(){glowNow(e)},110)}
 
 /* ---------- theme: the service resolves the chosen theme (manager > Theme) into CSS variables and a few numbers ---------- */
-var TH0={cols:10,tileH:151,gapY:26,gt:350,viewH:780,dockN:4,overlay:false,push:null,overlayH:510,glow:'',gicon:'fill',glowTop:false},TH=TH0,themeKeys=[],themeAttrs=['data-bar','data-labels','data-clock','data-grid','data-galign','data-gicon','data-focus','data-tlabel','data-glow','data-font','data-backdrop'];
+var TH0={cols:10,tileH:151,gapY:26,gt:350,viewH:780,dockN:4,overlay:false,push:null,overlayH:510,glow:'',gicon:'fill',glowTop:false,iconH:56},TH=TH0,themeKeys=[],themeAttrs=['data-bar','data-labels','data-clock','data-grid','data-galign','data-gicon','data-focus','data-tlabel','data-glow','data-font','data-backdrop','data-deck'];
 function applyTheme(t){
   var st=document.documentElement.style,b=document.body,k;
   for(k=0;k<themeKeys.length;k++)st.removeProperty(themeKeys[k]);themeKeys=[];
@@ -408,7 +431,26 @@ function applyTheme(t){
   var w=t.wallpaper;
   if(w){var d='rgba('+t.nightRgb+','+w.dim+')';st.setProperty('--wall','linear-gradient('+d+','+d+'),url("'+API+'/api/theme/wallpaper/'+w.id+'/'+w.file+'")');themeKeys.push('--wall')}
   for(k in t.attrs)b.setAttribute('data-'+k,t.attrs[k]);
-  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,gt:t.gt||350,viewH:t.viewH||780,dockN:t.dockN||4,overlay:!!t.overlay,push:t.push||null,overlayH:t.overlayH||510,glow:t.glowRgb||'',gicon:t.attrs&&t.attrs.gicon||'fill',glowTop:!!(t.attrs&&t.attrs.glow==='top')}}
+  TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,gt:t.gt||350,viewH:t.viewH||780,dockN:t.dockN||4,overlay:!!t.overlay,push:t.push||null,overlayH:t.overlayH||510,glow:t.glowRgb||'',gicon:t.attrs&&t.attrs.gicon||'fill',glowTop:!!(t.attrs&&t.attrs.glow==='top'),iconH:t.iconH||56}}
+
+/* ---------- Plex On Deck: the service signs in and reads the user's server (helper/plex.js); the page only gets titles, progress and pictures ---------- */
+function deckCap(it){return it.sub?it.title+' \u00B7 '+it.sub:it.title}
+function plexTarget(it){return '/library/metadata/'+it.key}
+function deckLoad(){
+  if(document.body.getAttribute('data-deck')!=='show')return;
+  api('/api/plex/ondeck').then(function(x){
+    var items=(x&&x.items)||[],sig=JSON.stringify(items.map(function(i){return [i.key,Math.round(i.progress*100)]}));
+    if(sig===deckSig)return;deckSig=sig;deckItems=items;rebuild()}).catch(function(){})}
+setInterval(deckLoad,5*60000);
+function plexMenu(){api('/api/plex/status').then(function(s){
+  if(s.state==='on')return openMenu('Plex',[{label:t('Signed in'),sub:s.server||'',fn:function(){}},{label:t('Sign out'),fn:function(){api('/api/plex/unlink',{}).then(function(){deckItems=[];deckSig='';rebuild()})}}]);
+  api('/api/plex/link',{}).then(function(l){
+    if(!l||!l.code)return toast(t('Could not reach plex.tv'));
+    openMenu('Plex',[{label:t('On your phone, go to plex.tv/link'),fn:function(){}},{label:t('and enter the code')+'  '+l.code,stay:true,fn:function(){}}]);
+    var depth=stack.length;
+    (function wait(){setTimeout(function(){
+      if(stack.length!==depth)return;   /* the menu was closed: stop asking */
+      api('/api/plex/status').then(function(x){if(x.state==='on'){closeMenus();toast(t('Signed in to Plex'));deckSig='';deckLoad()}else if(x.state==='linking')wait();else{closeMenus();toast(t('The Plex code expired'))}})},3000)})()})})}
 
 /* ---------- backdrop photo: the service picks and keeps it (helper/backdrop.js); the page cross-fades to a new one once it has loaded ---------- */
 var bdFile='',bdSide=0,bdT=0;
@@ -434,17 +476,17 @@ function setFocus(nr,nc,first){
   if(first)glowNow(e);else glowSoon(e);
   var sh=0;
   if(TH.push){   /* the grid sits under the dock: focusing it scrolls everything up (the dock stops at its 'up' position) and the grid fades in */
-    document.body.classList.toggle('grid-open',r>=2);
-    var ps=0;if(r>=2){var bot=TH.push.gridTop-TH.push.up+(r-2)*(TH.tileH+TH.gapY)+TH.tileH,ex=Math.max(0,bot-(1080-60));ps=-(TH.push.up+ex)}
+    document.body.classList.toggle('grid-open',r>=G);
+    var ps=0;if(r>=G){var bot=TH.push.gridTop-TH.push.up+(r-G)*(TH.tileH+TH.gapY)+TH.tileH,ex=Math.max(0,bot-(1080-60));ps=-(TH.push.up+ex)}
     $('scroll').style.transform=ps?'translateY('+ps+'px)':'';$('grid').style.transform='';
     if(TH.glowTop)$('gA').style.transform=$('gB').style.transform=ps?'translateY('+ps+'px)':'';   /* the glow belongs to the top: it leaves with the dock */
     return}
   if(TH.overlay){   /* the grid is an overlay above the dock: it opens when the focus goes down into it and scrolls on its own */
-    document.body.classList.toggle('grid-open',r>=2);
-    var gs=0;if(r>=2)gs=Math.min(0,TH.overlayH-((r-2)*(TH.tileH+TH.gapY)+TH.tileH+24));
+    document.body.classList.toggle('grid-open',r>=G);
+    var gs=0;if(r>=G)gs=Math.min(0,TH.overlayH-((r-G)*(TH.tileH+TH.gapY)+TH.tileH+24));
     $('grid').style.transform=gs?'translateY('+gs+'px)':'';$('scroll').style.transform='';return}
   $('grid').style.transform='';
-  if(r>=2){var gr=rows.length-2,gt=TH.gt;sh=Math.min(0,Math.max(50-(gt+(r-2)*(TH.tileH+TH.gapY)),TH.viewH-54-(gt+gr*TH.tileH+(gr-1)*TH.gapY)))}   /* row height + gap from the theme: no layout reads */
+  if(r>=G){var gr=rows.length-G,gt=TH.gt;sh=Math.min(0,Math.max(50-(gt+(r-G)*(TH.tileH+TH.gapY)),TH.viewH-54-(gt+gr*TH.tileH+(gr-1)*TH.gapY)))}   /* row height + gap from the theme: no layout reads */
   $('scroll').style.transform=sh?'translateY('+sh+'px)':''}
 function mapCol(from,to,col){return from>1?Math.round(col*(to-1)/(from-1)):0}
 function posOf(e){for(var i=0;i<rows.length;i++){var j=rows[i].indexOf(e);if(j>=0)return [i,j]}return null}
@@ -489,6 +531,7 @@ function title(id){if(isInputEntry(id)){var a=inputApp(id,inputs,inputsLoaded);r
 /* ---------- actions ---------- */
 function act(e){
   var a=e._a;
+  if(a&&a.deck)return launch(PLEX_APP,{contentTarget:plexTarget(a.deck)});
   if(a){
     if(!a.sys){e.classList.add('launching');setTimeout(function(){e.classList.remove('launching')},4000)}
     return launch(a.appId||a.id)}
@@ -562,6 +605,7 @@ function customizeMenu(){
   openMenu(t('Customise'),[
     {label:t('Dock'),sub:t('apps and an input'),stay:true,fn:dockMenu},
     {label:t('Top buttons'),stay:true,fn:topButtonsMenu},
+    {label:'Plex',sub:t('On Deck'),stay:true,fn:plexMenu},
     {label:t('Hidden apps'),stay:true,fn:hiddenMenu},
     {label:t('App order'),sub:cfg.sort==='alpha'?t('A to Z'):t('Most used first'),fn:function(){cfg.sort=cfg.sort==='alpha'?'usage':'alpha';saveCfg()}},
     {label:t('Clock'),sub:cfg.clock==='24'?t('24-hour'):cfg.clock==='12'?t('12-hour'):t('Automatic'),fn:function(){cfg.clock=cfg.clock==='24'?'12':cfg.clock==='12'?'auto':'24';saveCfg();tick()}},
@@ -605,18 +649,21 @@ function rebuild(){
   var by={};apps.forEach(function(a){by[a.id]=a});
   var di=dockIds(),dock=di.map(function(i){return by[i]||inputApp(i,inputs,inputsLoaded)});
   var rest=apps.filter(function(a){return !isHidden(a.id)&&di.indexOf(a.id)<0}).sort(byOrder);
-  var oldE=rows[r]&&rows[r][c],keep=oldE&&oldE._a?oldE._a.id:null;
+  var oldE=rows[r]&&rows[r][c],keep=oldE&&oldE._a?oldE._a.id:null,first=!rows.length;
   if(oldE)oldE.classList.remove('f');
-  var dk=$('dock'),gd=$('grid'),bar=$('bar');
-  dk.textContent='';gd.textContent='';bar.textContent='';
+  var dk=$('dock'),gd=$('grid'),bar=$('bar'),dr=$('deckrow');
+  dk.textContent='';gd.textContent='';bar.textContent='';dr.textContent='';
+  var showDeck=document.body.getAttribute('data-deck')==='show'&&deckItems.length>0;
+  var dc=showDeck?deckItems.map(function(it){var t=tile({id:'plex:'+it.key,appId:PLEX_APP,title:it.title,deck:it});dr.appendChild(t);return t}):[];
+  $('deck').classList.toggle('on',showDeck);
   var d=dock.map(function(a){var t=tile(a);dk.appendChild(t);fit(t,true);return t});
   var g=rest.map(function(a){var t=tile(a);gd.appendChild(t);fit(t,TH.gicon==='center');return t});
   var tb=shownBar().concat([{label:'Customise',icon:'edit',action:'customize',fixed:true}]).map(function(o){
     var p=document.createElement('div');p.className='pill';p._o=o;p.innerHTML=svg(o.icon)+'<span></span>';p.lastChild.textContent=barLabel(o);
     hit(p);bar.appendChild(p);return p});
-  rows=[tb,d.length?d:tb];
+  rows=showDeck?[tb,dc,d.length?d:tb]:[tb,d.length?d:tb];DK=rows.length-1;G=DK+1;
   for(var i=0;i<g.length;i+=TH.cols)rows.push(g.slice(i,i+TH.cols));
-  var nr=Math.min(r,rows.length-1),nc=c;
+  var nr=first?DK:Math.min(r,rows.length-1),nc=c;
   if(keep&&tiles[keep]){var p=posOf(tiles[keep]);if(p){nr=p[0];nc=p[1]}}
   setFocus(nr,nc,true)}
 
@@ -636,8 +683,8 @@ function load(){
   usage=x.usage||{};
   var rank=Object.keys(usage).sort(function(a,b){return usage[b]-usage[a]});
   var sig=JSON.stringify([x.apps.map(function(a){return a.id}),x.config,rank]);
-  if(sig===lastSig){backdrop();return}lastSig=sig;
-  apps=x.apps.map(function(a){return {id:a.id,title:a.title}});cfg=x.config||{};applyTheme(cfg.theme);if(liveOn())apps.push({id:'__live',title:t('Live TV')});store();rebuild();backdrop()
+  if(sig===lastSig){backdrop();deckLoad();return}lastSig=sig;
+  apps=x.apps.map(function(a){return {id:a.id,title:a.title}});cfg=x.config||{};applyTheme(cfg.theme);if(liveOn())apps.push({id:'__live',title:t('Live TV')});store();rebuild();backdrop();deckLoad()
 }).catch(function(){toast(t('Helper not reachable, retrying...'));setTimeout(load,3000)})}
 
 /* ---------- input: tap OK to open, hold OK for options ---------- */
@@ -666,7 +713,7 @@ document.addEventListener('keydown',function(e){
   if(stack.length){
     if(k===13){if(downEnter&&Date.now()-lastEnter<1500){lastEnter=Date.now();e.preventDefault();return}downEnter=true;lastEnter=Date.now();swallowUp=true}
     if(menuKey(k))e.preventDefault();return}
-  if((TH.overlay||TH.push)&&r>=2&&(k===461||k===27||k===8)){setFocus(1,Math.min(c,rows[1].length-1));e.preventDefault();return}   /* Back closes the grid overlay */
+  if((TH.overlay||TH.push)&&r>=G&&(k===461||k===27||k===8)){setFocus(DK,Math.min(c,rows[DK].length-1));e.preventDefault();return}   /* Back closes the grid overlay */
   var len=rows[r].length;
   if(k>=37&&k<=40){var tn=performance.now();if(e.repeat||tn-lastMove<90){document.body.classList.add('snap');clearTimeout(snapT);snapT=setTimeout(function(){document.body.classList.remove('snap')},180)}lastMove=tn}
   if(k===37&&c>0)setFocus(r,c-1);

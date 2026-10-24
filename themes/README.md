@@ -50,6 +50,7 @@ Folder: [`bloom/`](bloom/)
 Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a nature photo behind them
 and the Inter typeface. Down moves the row up and the apps appear below it. The photo is one of the featured pictures of mountains, lakes,
 forests, waterfalls and coasts on Wikimedia Commons; the TV downloads a new one every six hours and shows its photographer and licence.
+Signed in to Plex (Customise > Plex: enter the code shown at plex.tv/link), the row above the dock shows On Deck from your own Plex server.
 
 [![Lift](lift/preview.jpg)](lift/preview.jpg)
 

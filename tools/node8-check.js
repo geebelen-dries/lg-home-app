@@ -301,6 +301,39 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(br.j.file && br.j.file !== f1 && !fs.existsSync(path.join(tmp, 'backdrop', f1)), 'after the set hours the next picture takes over and the old file is removed');
   await bd.prefetch(); wm.close(); delete process.env.CYTV_BACKDROP_URL; delete process.env.CYTV_BACKDROP_DIR;
 
+  // 9c. Plex On Deck: sign-in with a plex.tv/link code (a stand-in for plex.tv and for the user's server), the token stays in config.json,
+  // the page gets titles, progress and pictures through the service, and only library pictures are fetched
+  const plexMod = require(path.join(helper, 'plex'));
+  const psrv = plexMod.pickServer([{ provides: 'player', connections: [{ uri: 'http://a' }] }, { name: 'Box', provides: 'server', owned: true, clientIdentifier: 'm1', connections: [{ uri: 'https://x.plex.direct:32400', local: true, protocol: 'https', address: '10.0.0.5', port: 32400 }, { uri: 'https://relay', relay: true }] }]);
+  ok(psrv && psrv.uri === 'http://10.0.0.5:32400' && psrv.name === 'Box', 'the owned server is used over its local address');
+  const plxCard = plexMod.card({ ratingKey: 7, type: 'episode', grandparentTitle: 'Show', title: 'Pilot', parentIndex: 1, index: 2, viewOffset: 300, duration: 1200, thumb: '/library/metadata/7/thumb/99' });
+  ok(plxCard.title === 'Show' && /S1 \u00B7 E2 \u00B7 Pilot/.test(plxCard.sub) && plxCard.progress === 0.25 && plxCard.img === '/library/metadata/7/thumb/99' && plexMod.card({ ratingKey: 8, type: 'movie', title: 'M', art: 'http://evil/x' }).img === '', 'an On Deck item becomes a card; a picture outside the library is dropped');
+  let plxPolls = 0; const plxHits = [];
+  const plxSrv = http.createServer((q, rq) => {
+    const u = q.url, send = (o, t) => { rq.writeHead(200, { 'content-type': t || 'application/json' }); rq.end(typeof o === 'string' || Buffer.isBuffer(o) ? o : JSON.stringify(o)); }; plxHits.push(q.method + ' ' + u + ' ' + (q.headers['x-plex-token'] || ''));
+    if (q.method === 'POST' && /^\/api\/v2\/pins/.test(u)) return send({ id: 42, code: 'AB12', expiresIn: 900 });
+    if (/^\/api\/v2\/pins\/42/.test(u)) return send(++plxPolls < 2 ? { id: 42, authToken: null } : { id: 42, authToken: 'TOK' });
+    if (/^\/api\/v2\/resources/.test(u)) return send([{ name: 'Home', provides: 'server', owned: true, accessToken: 'SRV', connections: [{ uri: 'http://127.0.0.1:' + plxSrv.address().port, local: true, protocol: 'http' }] }]);
+    if (/^\/library\/onDeck/.test(u)) return q.headers['x-plex-token'] === 'SRV' ? send({ MediaContainer: { Metadata: [{ ratingKey: 5, type: 'movie', title: 'Film', year: 2020, viewOffset: 50, duration: 100, art: '/library/metadata/5/art/1' }] } }) : (rq.writeHead(401), rq.end());
+    if (/^\/photo\/:\/transcode/.test(u)) return send(Buffer.from([0xff, 0xd8, 0xff]), 'image/jpeg');
+    rq.writeHead(404); rq.end();
+  }).listen(0, '127.0.0.1');
+  await new Promise(r => plxSrv.on('listening', r));
+  process.env.CYTV_PLEXTV_URL = 'http://127.0.0.1:' + plxSrv.address().port;
+  let plxConf = {}; const plx = plexMod.create({ readConf: () => JSON.parse(JSON.stringify(plxConf)), writeConf: c => { plxConf = JSON.parse(JSON.stringify(c)); } });
+  const plxCall = async (act, method) => { const x = fake('/api/plex/' + act, method || 'GET'); x.res.raw = null; await plx.handle(x.req, x.res, '/api/plex/' + act.split('?')[0], async () => ({})); x.req.url = '/api/plex/' + act; return { code: x.res.code, j: x.res.out && x.res.out[0] === '{' ? JSON.parse(x.res.out) : null, out: x.res.out }; };
+  let plxR = await plxCall('status'); ok(plxR.j.state === 'off', 'Plex starts signed out');
+  plxR = await plxCall('link', 'POST'); ok(plxR.j.state === 'linking' && plxR.j.code === 'AB12' && /^[0-9a-f]{24}$/.test(plxConf.plex.clientId), 'signing in shows a plex.tv/link code and keeps an id for this TV');
+  for (let i = 0; i < 30 && !(plxConf.plex && plxConf.plex.token); i++) await new Promise(r => setTimeout(r, 300));
+  ok(plxConf.plex.token === 'TOK' && plxConf.plex.serverToken === 'SRV' && plxConf.plex.server.name === 'Home', 'the token arrives once the code is entered, and the server is found');
+  plxR = await plxCall('ondeck'); ok(plxR.j.items.length === 1 && plxR.j.items[0].title === 'Film' && plxR.j.items[0].progress === 0.5 && JSON.stringify(plxR.j).indexOf('SRV') < 0 && JSON.stringify(plxR.j).indexOf('TOK') < 0, 'On Deck comes from the server, without the token');
+  const plxIx = fake('/api/plex/img?p=' + encodeURIComponent('/library/metadata/5/art/1')); await plx.handle(plxIx.req, plxIx.res, '/api/plex/img', async () => ({}));
+  const plxIy = fake('/api/plex/img?p=' + encodeURIComponent('http://evil/x')); await plx.handle(plxIy.req, plxIy.res, '/api/plex/img', async () => ({}));
+  ok(plxIx.res.code === 200 && plxIy.res.code === 404, 'pictures come through the service, library pictures only');
+  plxR = await plxCall('unlink', 'POST'); ok(plxR.j.state === 'off' && !plxConf.plex.token && plxConf.plex.clientId, 'signing out forgets the token');
+  ok(/plex: _p/.test(fs.readFileSync(path.join(helper, 'helper.js'), 'utf8')), 'the launcher\'s copy of the settings leaves out the Plex token');
+  plxSrv.close(); delete process.env.CYTV_PLEXTV_URL;
+
   // 10. The picker keepalive stops when the system keeps closing the hidden picker (issue 5)
   const pickerMod = require(path.join(helper, 'picker'));
   let pkClock = 1000, pkLaunches = 0, pkRunning = [], pkSaved = {};

@@ -33,7 +33,7 @@ folder of the GitHub repository (the `main` branch):
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
-| Lift | Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a nature photo behind them that changes every few hours, and the Inter typeface. Down moves the row up and the apps appear below it. |
+| Lift | Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a nature photo behind them that changes every few hours, Plex On Deck above the dock (Customise > Plex to sign in) and the Inter typeface. Down moves the row up and the apps appear below it. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
 
@@ -173,6 +173,9 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `shelf.x` | 0 to 900 | `96` | Margin on both sides, in px. |
 | `shelf.y` | 0 to 900 | `150` | Distance from the top edge, in px. |
 | `shelf.scale` | 0.4 to 1.6 | `1` | Scale of the name. |
+| **ondeck** | | | |
+| `ondeck.show` | `true` or `false` | `false` | Show Plex On Deck as a row of cards above the dock, once Plex is signed in (Customise > Plex). |
+| `ondeck.y` | 0 to 900 | `440` | Distance of the On Deck row (its heading) from the top edge, in px. |
 | **dock** | | | |
 | `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. |
 | `dock.align` | `left`, `center`, `right` | `left` | Which side `dock.x` counts from; `center` centres the dock. |
@@ -210,6 +213,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `tile.border` | 0 to 0.6 | `0` | Opacity of a thin outline on every tile. |
 | `tile.ringWidth` | 0 to 10 | `4` | Width of the focus ring, in px; 0 for none. |
 | `tile.ringOffset` | 0 to 14 | `4` | Space between a tile and its focus ring, in px. |
+| `tile.iconSize` | 30 to 100 | `56` | Height of an app icon in a wide tile (the dock, and grid tiles with `grid.icon` `center`), in % of the tile height. |
 | `tile.focus` | `ring`, `lift` | `ring` | `ring`: a ring around the focused tile; `lift`: no ring, the tile rises with a shadow under it. |
 | `tile.label` | `none`, `focus` | `none` | `focus`: the name of the focused app in small text under its tile (set `shelf.show` to false to drop the large name). |
 | **effects** | | | |

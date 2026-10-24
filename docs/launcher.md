@@ -46,6 +46,21 @@ An HDMI input can sit in the dock too. **Customise → Dock → An input...** pi
 name the TV gives that input, and OK opens it. It moves and is removed like an app tile (hold OK). If the TV stops listing
 the input, the tile goes away by itself.
 
+To show a logo instead of the HDMI glyph (the logo of a set-top box, say), put a `.png`, `.jpg` or `.webp` in
+`/media/developer/cleanyourtv/icons/` and name it in `config.json` with the input's id and a background colour:
+
+```json
+"inputIcons": { "HDMI_3": { "file": "box.png", "bg": "#ffffff" } }
+```
+
+## Plex On Deck
+
+Themes that show it (Lift) put a row of **On Deck** cards above the dock: what you are in the middle of on your own Plex server,
+with a progress bar. **Customise → Plex** signs in: it shows a short code, which you enter at **plex.tv/link** on a phone or
+computer; no password is typed on the TV. The TV keeps the token in `config.json` and never passes it to the page; the cards
+and their pictures come from your server on the local network. OK on a card opens Plex. **Customise → Plex → Sign out**
+forgets the token.
+
 ## Inputs
 
 The **Inputs** button lists HDMI inputs by the names LG shows, with what is connected and a marker on the active one. OK

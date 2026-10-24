@@ -1,7 +1,7 @@
 {
  "name": "Lift",
  "author": "CleanYourTV",
- "description": "Wide 16:9 tiles that lift on focus, small names, a nature photo from Wikimedia Commons behind them and Inter. Down shows the other apps.",
+ "description": "Wide 16:9 tiles that lift on focus, Plex On Deck, a nature photo from Wikimedia Commons behind them and Inter. Down shows the other apps.",
  "colors": {
   "night": "#08090c",
   "panel": "#1c1d22",
@@ -62,7 +62,8 @@
  "tile": {
   "focus": "lift",
   "label": "focus",
-  "ringWidth": 0
+  "ringWidth": 0,
+  "iconSize": 86
  },
  "effects": {
   "glow": 0.3,
@@ -70,5 +71,9 @@
   "backdrop": "nature",
   "backdropHours": 6,
   "backdropDim": 0.2
+ },
+ "ondeck": {
+  "show": true,
+  "y": 440
  }
 }
