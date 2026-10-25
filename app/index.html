@@ -498,7 +498,11 @@ function applyTheme(t){
 
 /* ---------- Plex On Deck: the service signs in and reads the user's server (helper/plex.js); the page only gets titles, progress and pictures ---------- */
 function deckCap(it){return it.sub?it.title+' \u00B7 '+it.sub:it.title}
-function plexTarget(it){return '/library/metadata/'+it.key}
+/* OK on a card: Plex on the TV ignores launch links (and restarts on one), so Plex is opened as it is and the service starts the
+   item on it once it is online, after the profile picker (helper/plex.js, the way Plex's cast button does it) */
+function deckPlay(it){
+  launch(PLEX_APP);
+  api('/api/plex/play',{key:it.key}).then(function(x){if(x&&x.error)toast(x.error);else toast(t('Opening in Plex...'))}).catch(function(){})}
 function deckLoad(){
   if(document.body.getAttribute('data-deck')!=='show')return;
   api('/api/plex/ondeck').then(function(x){
@@ -660,7 +664,7 @@ function act(e){
   if(e._l)return lightAct(e);
   if(e===heroEl)heroStop();
   var a=e._a;
-  if(a&&a.deck)return launch(PLEX_APP,{contentTarget:plexTarget(a.deck)});
+  if(a&&a.deck)return deckPlay(a.deck);
   if(a){
     if(!a.sys){e.classList.add('launching');setTimeout(function(){e.classList.remove('launching')},4000)}
     return launch(a.appId||a.id)}

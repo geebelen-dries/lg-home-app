@@ -315,19 +315,24 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(psrv && psrv.uri === 'http://10.0.0.5:32400' && psrv.name === 'Box', 'the owned server is used over its local address');
   const plxCard = plexMod.card({ ratingKey: 7, type: 'episode', grandparentTitle: 'Show', title: 'Pilot', parentIndex: 1, index: 2, viewOffset: 300, duration: 1200, thumb: '/library/metadata/7/thumb/99' });
   ok(plxCard.title === 'Show' && /S1 \u00B7 E2 \u00B7 Pilot/.test(plxCard.sub) && plxCard.progress === 0.25 && plxCard.img === '/library/metadata/7/thumb/99' && plexMod.card({ ratingKey: 8, type: 'movie', title: 'M', art: 'http://evil/x' }).img === '', 'an On Deck item becomes a card; a picture outside the library is dropped');
-  let plxPolls = 0; const plxHits = [];
+  let plxPolls = 0, plxTvOn = false; const plxHits = [], plxPlays = [];
   const plxSrv = http.createServer((q, rq) => {
     const u = q.url, send = (o, t) => { rq.writeHead(200, { 'content-type': t || 'application/json' }); rq.end(typeof o === 'string' || Buffer.isBuffer(o) ? o : JSON.stringify(o)); }; plxHits.push(q.method + ' ' + u + ' ' + (q.headers['x-plex-token'] || ''));
     if (q.method === 'POST' && /^\/api\/v2\/pins/.test(u)) return send({ id: 42, code: 'AB12', expiresIn: 900 });
     if (/^\/api\/v2\/pins\/42/.test(u)) return send(++plxPolls < 2 ? { id: 42, authToken: null } : { id: 42, authToken: 'TOK' });
-    if (/^\/api\/v2\/resources/.test(u)) return send([{ name: 'Home', provides: 'server', owned: true, accessToken: 'SRV', connections: [{ uri: 'http://127.0.0.1:' + plxSrv.address().port, local: true, protocol: 'http' }] }]);
+    if (/^\/api\/v2\/resources/.test(u)) return send([{ name: 'Home', provides: 'server', owned: true, accessToken: 'SRV', connections: [{ uri: 'http://127.0.0.1:' + plxSrv.address().port, local: true, protocol: 'http' }] },
+      { name: 'Other TV', provides: 'client,player', platform: 'webOS', clientIdentifier: 'OTHER', presence: true, connections: [{ uri: 'http://127.0.0.1:1', address: '10.9.9.8', local: true }] },
+      { name: 'This TV', provides: 'client,player', platform: 'webOS', clientIdentifier: 'TVID', presence: plxTvOn, connections: [{ uri: 'http://127.0.0.1:' + plxSrv.address().port, address: '10.9.9.9', local: true }] }]);
+    if (/^\/library\/metadata\/5$/.test(u)) return send({ MediaContainer: { Metadata: [{ ratingKey: 5, viewOffset: 50 }] } });
+    if (q.method === 'POST' && /^\/playQueues\?/.test(u)) return send({ MediaContainer: { playQueueID: 77 } });
+    if (/^\/player\/playback\/playMedia\?/.test(u)) { plxPlays.push(u + ' target=' + q.headers['x-plex-target-client-identifier']); return send('<Response code="200" status="OK" />', 'text/xml'); }
     if (/^\/library\/onDeck/.test(u)) return q.headers['x-plex-token'] === 'SRV' ? send({ MediaContainer: { Metadata: [{ ratingKey: 5, type: 'movie', title: 'Film', year: 2020, viewOffset: 50, duration: 100, art: '/library/metadata/5/art/1' }] } }) : (rq.writeHead(401), rq.end());
     if (/^\/photo\/:\/transcode/.test(u)) return send(Buffer.from([0xff, 0xd8, 0xff]), 'image/jpeg');
     rq.writeHead(404); rq.end();
   }).listen(0, '127.0.0.1');
   await new Promise(r => plxSrv.on('listening', r));
   process.env.CYTV_PLEXTV_URL = 'http://127.0.0.1:' + plxSrv.address().port;
-  let plxConf = {}; const plx = plexMod.create({ readConf: () => JSON.parse(JSON.stringify(plxConf)), writeConf: c => { plxConf = JSON.parse(JSON.stringify(c)); } });
+  let plxConf = {}; const plx = plexMod.create({ readConf: () => JSON.parse(JSON.stringify(plxConf)), writeConf: c => { plxConf = JSON.parse(JSON.stringify(c)); }, addrs: () => ['10.9.9.9'] });
   const plxCall = async (act, method) => { const x = fake('/api/plex/' + act, method || 'GET'); x.res.raw = null; await plx.handle(x.req, x.res, '/api/plex/' + act.split('?')[0], async () => ({})); x.req.url = '/api/plex/' + act; return { code: x.res.code, j: x.res.out && x.res.out[0] === '{' ? JSON.parse(x.res.out) : null, out: x.res.out }; };
   let plxR = await plxCall('status'); ok(plxR.j.state === 'off', 'Plex starts signed out');
   plxR = await plxCall('link', 'POST'); ok(plxR.j.state === 'linking' && plxR.j.code === 'AB12' && /^[0-9a-f]{24}$/.test(plxConf.plex.clientId), 'signing in shows a plex.tv/link code and keeps an id for this TV');
@@ -337,6 +342,13 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   const plxIx = fake('/api/plex/img?p=' + encodeURIComponent('/library/metadata/5/art/1')); await plx.handle(plxIx.req, plxIx.res, '/api/plex/img', async () => ({}));
   const plxIy = fake('/api/plex/img?p=' + encodeURIComponent('http://evil/x')); await plx.handle(plxIy.req, plxIy.res, '/api/plex/img', async () => ({}));
   ok(plxIx.res.code === 200 && plxIy.res.code === 404, 'pictures come through the service, library pictures only');
+  // OK on a card: the item is started on this TV's Plex app (not another TV's) once that app is online, resuming where it was
+  const plxPlay = async b => { const x = fake('/api/plex/play', 'POST'); await plx.handle(x.req, x.res, '/api/plex/play', async () => b); return { code: x.res.code, j: JSON.parse(x.res.out || '{}') }; };
+  plxR = await plxPlay({ key: '../5' }); ok(plxR.code === 400, 'only a library item can be played');
+  plxR = await plxPlay({ key: '5' }); await new Promise(r => setTimeout(r, 300));
+  ok(plxR.j.state === 'waiting' && plxPlays.length === 0, 'while the Plex app is not open yet, the play request waits');
+  plxTvOn = true; for (let i = 0; i < 40 && !plxPlays.length; i++) await new Promise(r => setTimeout(r, 200));
+  ok(plxPlays.length === 1 && /key=%2Flibrary%2Fmetadata%2F5&offset=50&/.test(plxPlays[0]) && /containerKey=%2FplayQueues%2F77/.test(plxPlays[0]) && /target=TVID$/.test(plxPlays[0]), 'once it is open the item starts on this TV\'s Plex app, where it was left off');
   plxR = await plxCall('unlink', 'POST'); ok(plxR.j.state === 'off' && !plxConf.plex.token && plxConf.plex.clientId, 'signing out forgets the token');
   ok(/plex: _p/.test(fs.readFileSync(path.join(helper, 'helper.js'), 'utf8')), 'the launcher\'s copy of the settings leaves out the Plex token');
   plxSrv.close(); delete process.env.CYTV_PLEXTV_URL;
