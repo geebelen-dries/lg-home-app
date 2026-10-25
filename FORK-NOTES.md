@@ -81,8 +81,8 @@ CYTV_REPO=geebelen-dries/lg-home-app curl -fsSL \
 echo 'geebelen-dries/lg-home-app' > /media/developer/cleanyourtv/source
 ```
 
-Do this **only after the first release exists**, or Update 404s. `rm` the file to go back to upstream. *Not done yet —
-the TV currently follows upstream.*
+Do this **only after the first release exists**, or Update 404s. `rm` the file to go back to upstream. *Done: the TV
+follows this fork.*
 
 **C. Fast loop without a release** — build, copy, install:
 
@@ -124,10 +124,8 @@ A reboot without the boot scripts also brings LG's Home back.
   debloat still stops LG's ad/telemetry services. Block LG's domains in the router/NextDNS instead.
 * **Unlisted firmware** — `bootstrap.sh` has `TESTED_SDK="10."`; on 11.2.0 it needs `--force`.
 * **Home key opens LG's Home** — set *Settings → General → Home Settings → Home Style* to **Basic**.
-* **The dock only holds apps.** `dockIds()` filters ids through the helper's `/api/apps`, which has no HDMI inputs, so
-  an input cannot be a dock tile. "TelenetTV Box" therefore sits in the top bar as
-  `{"label":"TelenetTV Box","icon":"hdmi","app":"com.webos.app.hdmi3"}`. Making it a tile means changing
-  `dockIds()`/`rebuild()` in `app/index.html` to accept an input entry.
+* **An input in the dock.** The dock accepts `input:<id>` entries (`input:HDMI_3`); the Hero theme shows the first one
+  large and live.
 
 ## Still true from upstream
 
