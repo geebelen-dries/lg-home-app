@@ -586,7 +586,7 @@ function ltPaint(d){
   d.querySelector('.ls').textContent=l.all?'':l.off?t('offline'):l.on?(l.level!=null?l.level+'%':t('on')):t('off')}
 function ltPaintAll(){
   [].forEach.call($('ltrow').children,function(d){if(d._l)ltPaint(d)});
-  var n=ltItems.filter(function(l){return l.on}).length;$('ltsub').textContent=ltOff?'':n?n+' '+t('on'):t('all off');
+  var n=ltItems.filter(function(l){return l.on}).length;$('ltsub').textContent=ltOff||!ltItems.length?'':n?n+' '+t('on'):t('all off');
   $('lth').textContent=t('Lights')}
 function lightAct(d){
   var l=d._l;if(!l.all&&l.off)return;
