@@ -33,7 +33,7 @@ folder of the GitHub repository (the `main` branch):
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
-| Hero | Your TV input large and live (sound while it has the focus), the rain forecast and your Home Assistant lights beside it, and the other dock apps and Plex On Deck in one row below. Extends Lift. |
+| Hero | Your TV input large and live (sound while it has the focus), the rain forecast and your Home Assistant scenes beside it, and the other dock apps and Plex On Deck in one row below. Extends Lift. |
 | Lift | Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a nature photo behind them that changes every few hours, Plex On Deck above the dock (Customise > Plex to sign in) and the Inter typeface. Down moves the row up and the apps appear below it. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
@@ -186,7 +186,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `hero.live` | `true` or `false` | `true` | Show the input live in the large picture, with sound while it has the focus. |
 | **panel** | | | |
 | `panel.weather` | `true` or `false` | `true` | Show the rain forecast in the panel (place: manager > Voice > Set up from your phone, or Home Assistant's location). |
-| `panel.lights` | `true` or `false` | `true` | Show the Home Assistant lights in the panel. |
+| `panel.lights` | `true` or `false` | `true` | Show the Home Assistant scenes (and All off) in the panel. |
 | **dock** | | | |
 | `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. |
 | `dock.align` | `left`, `center`, `right` | `left` | Which side `dock.x` counts from; `center` centres the dock. |

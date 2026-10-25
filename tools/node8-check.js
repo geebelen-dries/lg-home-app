@@ -353,8 +353,8 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(/plex: _p/.test(fs.readFileSync(path.join(helper, 'helper.js'), 'utf8')), 'the launcher\'s copy of the settings leaves out the Plex token');
   plxSrv.close(); delete process.env.CYTV_PLEXTV_URL;
 
-  // 9d. The hero layout's panel: the rain forecast (a stand-in for Open-Meteo) and Home Assistant lights (a stand-in for Home Assistant);
-  // the place comes from the phone page or Home Assistant, the token never reaches the page, only lights can be switched
+  // 9d. The hero layout's panel: the rain forecast (a stand-in for Open-Meteo) and Home Assistant scenes (a stand-in for Home Assistant);
+  // the place comes from the phone page or Home Assistant, the token never reaches the page, only scenes can be turned on
   const homeMod = require(path.join(helper, 'home'));
   ok(homeMod.summary([{ t: '20:00', mm: 0 }, { t: '21:00', mm: 0 }, { t: '22:00', mm: 0.4 }]) === 'Rain from 22:00' && homeMod.summary([{ t: '20:00', mm: 1 }, { t: '21:00', mm: 0 }]) === 'Raining, dry by 21:00' && homeMod.summary([{ t: '20:00', mm: 0 }, { t: '21:00', mm: 0.05 }]) === 'Dry for the next 2 hours', 'the forecast line says when rain starts or stops');
   const hmHits = [];
@@ -365,8 +365,8 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
       if (/^\/v1\/search/.test(q.url)) return send(/name=Nowhere/.test(q.url) ? { results: [] } : { results: [{ name: 'Ghent', latitude: 51.05, longitude: 3.72 }] });
       if (/^\/v1\/forecast/.test(q.url)) return send({ current: { time: '2026-10-25T20:15', temperature_2m: 12.4, weather_code: 3 }, hourly: { time: ['2026-10-25T19:00', '2026-10-25T20:00', '2026-10-25T21:00', '2026-10-25T22:00'], temperature_2m: [13, 12.4, 11.6, 11], precipitation: [0, 0, 0, 0.8], precipitation_probability: [0, 5, 20, 80], weather_code: [3, 3, 3, 61] } });
       if (q.url === '/api/config') return q.headers.authorization === 'Bearer HATOK' ? send({ latitude: 50.85, longitude: 4.35, location_name: 'Home' }) : send({}, 401);
-      if (q.url === '/api/states') return send([{ entity_id: 'light.kitchen', state: 'off', attributes: { friendly_name: 'Kitchen' } }, { entity_id: 'light.living', state: 'on', attributes: { friendly_name: 'Living room', brightness: 178 } }, { entity_id: 'light.hall', state: 'unavailable', attributes: {} }, { entity_id: 'switch.boiler', state: 'on', attributes: {} }]);
-      if (/^\/api\/services\/light\//.test(q.url)) return send([]);
+      if (q.url === '/api/states') return send([{ entity_id: 'light.kitchen', state: 'off', attributes: { friendly_name: 'Kitchen' } }, { entity_id: 'light.living', state: 'on', attributes: { friendly_name: 'Living room' } }, { entity_id: 'scene.movie', state: '2026-10-25T19:00:00+00:00', attributes: { friendly_name: 'Movie' } }, { entity_id: 'scene.evening', state: '2026-10-25T18:00:00+00:00', attributes: { friendly_name: 'Evening' } }, { entity_id: 'scene.old_one', state: 'unavailable', attributes: {} }, { entity_id: 'switch.boiler', state: 'on', attributes: {} }]);
+      if (/^\/api\/services\/(light|scene)\//.test(q.url)) return send([]);
       send({}, 404);
     });
   }).listen(0, '127.0.0.1');
@@ -375,7 +375,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   let hmConf = {}; const hm = homeMod.create({ readConf: () => JSON.parse(JSON.stringify(hmConf)), writeConf: c => { hmConf = JSON.parse(JSON.stringify(c)); } });
   const hmCall = async (u, method, b) => { const x = fake(u, method || 'GET'); await hm.handle(x.req, x.res, u, async () => b || {}); return { code: x.res.code, j: JSON.parse(x.res.out || '{}'), out: x.res.out }; };
   let hmR = await hmCall('/api/weather'); ok(hmR.j.off === true && hmHits.length === 0, 'no place and no Home Assistant: no forecast and nothing fetched');
-  hmR = await hmCall('/api/lights'); ok(hmR.j.off === true, 'no Home Assistant: no lights');
+  hmR = await hmCall('/api/scenes'); ok(hmR.j.off === true, 'no Home Assistant: no scenes');
   hmConf = { voice: { ha: { url: hmBase, token: 'HATOK' } } };
   hmR = await hmCall('/api/weather');
   ok(hmR.j.place === 'Home' && hmHits.some(h => /latitude=50\.85&longitude=4\.35/.test(h)) && hmR.j.hours[0].t === '20:00' && hmR.j.hours.length === 3 && hmR.j.now.temp === 12 && hmR.j.summary === 'Rain from 22:00' && hmR.j.hours[2].kind === 'rain', 'without a place the forecast is for Home Assistant\'s location, from this hour on');
@@ -383,10 +383,10 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   await hmCall('/api/weather').then(() => {}); hmR = await hmCall('/api/weather');
   ok(hmR.j.place === 'Ghent' && hmConf.weather.lat === 51.05 && hmConf.weather.for === 'Ghent' && hmHits.some(h => /latitude=51\.05/.test(h)) && hmHits.filter(h => /\/v1\/search/.test(h)).length === 1, 'a typed place is looked up once and kept');
   hmConf.weather = { place: 'Nowhere' }; hmR = await hmCall('/api/weather'); ok(hmR.j.stale === true || !!hmR.j.error, 'a place that is not found does not break the panel');
-  hmR = await hmCall('/api/lights');
-  ok(hmR.j.items.length === 3 && hmR.j.items[0].name === 'Hall' && hmR.j.items[0].off === true && hmR.j.items[2].name === 'Living room' && hmR.j.items[2].on && hmR.j.items[2].level === 70 && hmR.out.indexOf('HATOK') < 0 && hmR.out.indexOf('boiler') < 0, 'the lights are listed by name with their state, without the token or other devices');
-  hmR = await hmCall('/api/lights/toggle', 'POST', { id: 'light.kitchen' }); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/light\/toggle Bearer HATOK \{"entity_id":"light.kitchen"\}/.test(h)), 'OK on a light toggles it in Home Assistant');
-  hmR = await hmCall('/api/lights/toggle', 'POST', { id: 'switch.boiler' }); ok(hmR.code === 400 && !hmHits.some(h => /boiler/.test(h) && /^POST/.test(h)), 'only lights can be switched');
+  hmR = await hmCall('/api/scenes');
+  ok(hmR.j.items.length === 3 && hmR.j.items[0].name === 'Evening' && hmR.j.items[1].name === 'Movie' && hmR.j.items[1].active && !hmR.j.items[0].active && hmR.j.items[2].name === 'Old one' && hmR.j.items[2].off && hmR.j.lightsOn === 1 && hmR.out.indexOf('HATOK') < 0 && hmR.out.indexOf('boiler') < 0, 'the scenes are listed by name, the last one used is marked while a light is on, without the token or other devices');
+  hmR = await hmCall('/api/scenes/activate', 'POST', { id: 'scene.evening' }); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/scene\/turn_on Bearer HATOK \{"entity_id":"scene.evening"\}/.test(h)), 'OK on a scene turns it on in Home Assistant');
+  hmR = await hmCall('/api/scenes/activate', 'POST', { id: 'switch.boiler' }); ok(hmR.code === 400 && !hmHits.some(h => /boiler/.test(h) && /^POST/.test(h)), 'only scenes can be turned on');
   hmR = await hmCall('/api/lights/off', 'POST'); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/light\/turn_off Bearer HATOK \{"entity_id":"all"\}/.test(h)), 'All off switches every light off');
   hmSrv.close(); delete process.env.CYTV_METEO_URL; delete process.env.CYTV_GEO_URL;
   const heroTh = themeMod.normalize({ home: { layout: 'hero' }, hero: { w: 1040, y: 136 }, dock: { anchor: 'bottom' } }, 'herotest');
@@ -467,6 +467,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(dockCtx.isInputEntry('input:HDMI_3') && !dockCtx.isInputEntry('netflix') && !dockCtx.isInputEntry(null) && !dockCtx.isInputEntry(42), 'only a string with the input: prefix is an input dock entry');
   const a3 = dockCtx.inputApp('input:HDMI_3', [hdmi3], true);
   ok(a3 && a3.appId === 'com.webos.app.hdmi3' && a3.title === 'TelenetTV Box' && a3.input === true, 'an input entry resolves to the device it names, with the name the TV shows for it');
+  dockCtx.cfg = { inputIcons: { HDMI_3: { file: 'x.png', name: 'Telenet TV' } } }; ok(dockCtx.inputApp('input:HDMI_3', [hdmi3], true).title === 'Telenet TV', 'an input can be given a name of its own in config.json (inputIcons.<id>.name)'); dockCtx.cfg = undefined;
   ok(dockCtx.inputApp('input:HDMI_3', [], true) === null, 'an input the TV no longer lists drops out of the dock instead of leaving a dead tile');
   const early = dockCtx.inputApp('input:HDMI_3', [], false);
   ok(early && early.title === 'HDMI 3' && early.appId === '', 'before the input list arrives the entry keeps its place and shows the port');

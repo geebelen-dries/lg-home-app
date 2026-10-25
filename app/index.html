@@ -133,7 +133,7 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 #deck .tile .pb{position:absolute;left:14px;right:14px;bottom:12px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);overflow:hidden}
 #deck .tile .pb i{display:block;height:100%;background:#fff}
 #deck .tile.f{transform:translateY(var(--grid-lift)) scale(var(--grid-fs))}
-/* hero layout: the first input large (live when the theme asks), the rain forecast and the lights beside it, apps and On Deck in one row */
+/* hero layout: the first input large (live when the theme asks), the rain forecast and the scenes beside it, apps and On Deck in one row */
 #hero,#panel,#dock .dhh,.tile .hx{display:none}
 [data-layout=hero] #hero{display:block;position:absolute;left:var(--hero-l);top:var(--hero-t);width:var(--hero-w);height:var(--hero-h);z-index:4}
 #hero .tile{width:100%;height:100%;border-radius:22px;background:#000}
@@ -149,7 +149,6 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 #hero .live .hl{opacity:1}
 #hero .hb{position:absolute;left:0;right:0;bottom:0;padding:80px 32px 26px;border-radius:0 0 22px 22px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.72));color:#fff}
 #hero .hn{font-size:calc(40px*var(--fs));font-weight:600}
-#hero .hs{font-size:calc(22px*var(--fs));opacity:.85;margin-top:6px}
 [data-layout=hero].grid-open #hero,[data-layout=hero].grid-open #panel{opacity:0;pointer-events:none}
 #hero,#panel{transition:opacity calc(.25s*var(--spd)) linear}
 [data-layout=hero] #panel{display:block;position:absolute;left:var(--panel-l);top:var(--hero-t);width:var(--panel-w);height:var(--hero-h);z-index:4}
@@ -175,7 +174,6 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 .tile.lt .in{flex-direction:column;align-items:flex-start;justify-content:space-between;padding:9px 14px;box-sizing:border-box}
 .tile.lt svg{width:22px;height:22px}
 .tile.lt .ln{font-size:calc(20px*var(--fs));font-weight:500;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tile.lt .ls{font-size:calc(16px*var(--fs));opacity:.8}
 .tile.lt.on{background:#ffc861;color:#2a1c00}
 .tile.lt.on svg{stroke:#2a1c00}
 .tile.lt.na{opacity:.5}
@@ -187,6 +185,10 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 [data-layout=hero] #dock .tile.card .pb{position:absolute;left:14px;right:14px;bottom:12px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);overflow:hidden}
 [data-layout=hero] #dock .tile.card .pb i{display:block;height:100%;background:#fff}
 [data-layout=hero] #dock .tile.first{margin-left:32px}
+.zooming #view{overflow:visible}   /* the scroll area's clip line would cut the growing tile */
+.tile.zoom{z-index:60;transition:transform calc(.34s*var(--spd)) cubic-bezier(.4,0,.2,1)!important}
+.tile.zoom .cap,.tile.zoom::before{opacity:0!important}
+.zooming #top,.zooming #panel,.zooming #credit,.zooming #shelf,.zooming #deck .dh,.zooming #dock .dhh,.zooming .tile:not(.zoom){opacity:0!important;transition:opacity calc(.2s*var(--spd)) linear!important}
 [data-layout=hero] #dock .dhh{display:block;position:absolute;top:-56px;font-size:calc(28px*var(--fs));font-weight:600;white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.55)}   /* the label under the tile already names the input */
 
 /* Inter is set lighter than the TV's own face */
@@ -295,7 +297,7 @@ svg.st{width:26px;height:26px;fill:#ffcc4d;flex:none}.crow.f svg.st{fill:#c98a00
 <div class="glow" id="gA"></div><div class="glow" id="gB"></div><div id="credit"></div>
 <div id="top"><div id="clock"><div id="time"></div><div id="date"></div></div><div id="bar"></div></div>
 <div id="shelf"><div id="name"></div></div>
-<div id="hero"></div><div id="panel"><div class="pn" id="wx"></div><div class="pn" id="lt"><div class="ph"><b id="lth">Lights</b><span id="ltsub"></span></div><div id="ltrow"></div></div></div>
+<div id="hero"></div><div id="panel"><div class="pn" id="wx"></div><div class="pn" id="lt"><div class="ph"><b id="lth">Scenes</b><span id="ltsub"></span></div><div id="ltrow"></div></div></div>
 <div id="view"><div id="scroll"><div id="deck"><div class="dh">On Deck</div><div id="deckrow"></div></div><div id="dock"></div><div id="grid"></div></div></div>
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="facts" id="lv-ofacts"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><input id="lv-search" type="text" autocomplete="off"><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-filter" class="layer"></div><div id="lv-menu" class="layer"></div><div id="lv-msg" class="layer"></div><div id="lv-tune" class="layer"></div><div id="lv-toast" class="layer"></div><div id="lv-stats" class="layer"></div></div>
 <div id="toast"></div>
@@ -318,6 +320,7 @@ var ICONS={
   grid:'<path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>',
   hdmi:'<path d="M4 8h16v7l-3 3H7l-3-3z"/><path d="M9 11v3M12 11v3M15 11v3"/>',
   restore:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+  scene:'<path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18.5 14.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
   bulb:'<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
   power:'<path d="M12 3v8"/><path d="M6.3 7.3a8 8 0 1 0 11.4 0"/>',
   rain:'<path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17.5 8 3.5 3.5 0 0 1 17 15z"/><path d="M9 18l-1 2M13 18l-1 2M17 18l-1 2"/>',
@@ -362,7 +365,7 @@ function clockOpts(){var c=cfg.clock,o={hour:'numeric',minute:'2-digit'};if(c===
 var apps=[], cfg={}, usage={}, warned=false, rows=[], r=1, c=0, colors={}, tiles={}, lastSig='', gSide=0, gColor='', gT=0, saveT=0;
 var inputs=[], inputsLoaded=false, inputsSig='';
 var DK=1, G=2, deckItems=[], deckSig='', PLEX_APP='cdp-30';
-var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the lights */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
+var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, ltOn=0, dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the scenes */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
 function $(id){return document.getElementById(id)}
 var toastT;
 function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},4000)}
@@ -535,7 +538,7 @@ function backdrop(){
     im.src=src}).catch(function(){bdT=setTimeout(backdrop,60000)})}
 setInterval(backdrop,30*60000);
 
-/* ---------- hero layout: the first input of the dock large and live, the forecast and the lights beside it (helper/home.js) ---------- */
+/* ---------- hero layout: the first input of the dock large and live, the forecast and the scenes beside it (helper/home.js) ---------- */
 function isHero(){return document.body.getAttribute('data-layout')==='hero'}
 function escH(x){return String(x==null?'':x).replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]})}
 /* the input plays in a <video> of the page (webOS external input source); it is released whenever Home is not in front */
@@ -558,9 +561,8 @@ function heroPlay(force){
 function heroLog(m){try{var x=new XMLHttpRequest();x.open('GET',API+'/api/log?m='+encodeURIComponent('hero: '+m));x.send()}catch(e){}}   /* into the service log (/tmp/cleanyourtv-helper.log) */
 function heroSound(){if(hv)hv.muted=!(rows[r]&&rows[r][c]===heroEl)}
 function heroDeco(d,a){
-  if(!d._hx){var x=document.createElement('div');x.className='hx';x.innerHTML='<span class="hl">LIVE</span><div class="hb"><div class="hn"></div><div class="hs"></div></div>';d.appendChild(x);d._hx=x}
-  d._hx.querySelector('.hn').textContent=a.title;
-  d._hx.querySelector('.hs').textContent=TH.heroLive?t('Sound plays while this is selected')+' · '+t('OK: full screen'):t('OK to open')}
+  if(!d._hx){var x=document.createElement('div');x.className='hx';x.innerHTML='<span class="hl">LIVE</span><div class="hb"><div class="hn"></div></div>';d.appendChild(x);d._hx=x}
+  d._hx.querySelector('.hn').textContent=a.title}
 function dockShift(){
   if(r!==DK)return;var e=rows[r][c],x=e.offsetLeft,w=e.offsetWidth,W=1728;
   if(x+w+dkShift>W)dkShift=W-(x+w);if(x+dkShift<0)dkShift=-x;
@@ -576,26 +578,26 @@ function drawWx(){
     h+='</div>'}
   setHtml($('wx'),h)}
 function heroWake(){heroPlay();if(document.hidden&&isHero()&&heroEl&&!hv)api('/api/foreground').then(function(x){if(x&&x.appId==='com.webos.app.home')heroPlay(true)}).catch(function(){})}
-function ltLoad(){heroWake();if(!isHero()||document.body.getAttribute('data-lights')!=='show'||document.hidden)return;api('/api/lights').then(ltSet).catch(function(){})}
+function ltLoad(){heroWake();if(!isHero()||document.body.getAttribute('data-lights')!=='show'||document.hidden)return;api('/api/scenes').then(ltSet).catch(function(){})}
+/* Home Assistant scenes: one press turns a scene on; the last one used is marked while lights are on; All off ends them */
 function ltSet(x){
   if(!x||x.error)return;
-  var items=x.items||[],sig=JSON.stringify(items.map(function(i){return i.id}))+(x.off?'off':'');ltOff=!!x.off;ltItems=items;
+  var items=x.items||[],sig=JSON.stringify(items.map(function(i){return i.id}))+(x.off?'off':'');ltOff=!!x.off;ltItems=items;ltOn=x.lightsOn||0;
   if(sig!==ltSig){ltSig=sig;rebuild();return}
   ltPaintAll()}
-function ltTile(l){var d=document.createElement('div');d.className='tile lt';d._l=l;d.innerHTML='<div class="in">'+svg(l.all?'power':'bulb')+'<span class="ln"></span><span class="ls"></span></div>';hit(d);ltPaint(d);return d}
+function ltTile(l){var d=document.createElement('div');d.className='tile lt';d._l=l;d.innerHTML='<div class="in">'+svg(l.all?'power':'scene')+'<span class="ln"></span></div>';hit(d);ltPaint(d);return d}
 function ltPaint(d){
   var l=d._l;if(!l.all)for(var i=0;i<ltItems.length;i++)if(ltItems[i].id===l.id){l=d._l=ltItems[i];break}
-  d.classList.toggle('on',!!l.on);d.classList.toggle('na',!!l.off);
-  d.querySelector('.ln').textContent=l.all?t('All off'):l.name;
-  d.querySelector('.ls').textContent=l.all?'':l.off?t('offline'):l.on?(l.level!=null?l.level+'%':t('on')):t('off')}
+  d.classList.toggle('on',!!l.active);d.classList.toggle('na',!!l.off);
+  d.querySelector('.ln').textContent=l.all?t('All off'):l.name}
 function ltPaintAll(){
   [].forEach.call($('ltrow').children,function(d){if(d._l)ltPaint(d)});
-  var n=ltItems.filter(function(l){return l.on}).length;$('ltsub').textContent=ltOff||!ltItems.length?'':n?n+' '+t('on'):t('all off');
-  $('lth').textContent=t('Lights')}
+  $('ltsub').textContent=ltOff||!ltItems.length?'':ltOn?ltOn+' '+(ltOn===1?t('light on'):t('lights on')):t('all lights off');
+  $('lth').textContent=t('Scenes')}
 function lightAct(d){
   var l=d._l;if(!l.all&&l.off)return;
-  if(l.all)ltItems.forEach(function(x){x.on=false});else l.on=!l.on;ltPaintAll();   /* show it at once; the answer corrects it */
-  api(l.all?'/api/lights/off':'/api/lights/toggle',l.all?{}:{id:l.id}).then(function(x){if(x&&x.error)toast(x.error);ltSet(x)}).catch(function(){toast(t('Home Assistant did not answer'))})}
+  ltItems.forEach(function(x){x.active=!l.all&&x.id===l.id});if(l.all)ltOn=0;ltPaintAll();   /* show it at once; the answer corrects it */
+  api(l.all?'/api/lights/off':'/api/scenes/activate',l.all?{}:{id:l.id}).then(function(x){if(x&&x.error)toast(x.error);ltSet(x)}).catch(function(){toast(t('Home Assistant did not answer'))})}
 setInterval(wxLoad,15*60000);setInterval(ltLoad,30000);
 
 function setFocus(nr,nc,first){
@@ -642,7 +644,9 @@ function inputApp(entry,list,loaded){
   if(!dev&&loaded)return null;
   var port=dev&&dev.port;
   return {id:entry,appId:(dev&&dev.appId)||'',input:true,icon:'hdmi',dev:dev,
-    title:(dev&&dev.label)||(port?'HDMI '+port:id.replace(/_/g,' '))}}
+    title:inputName(id)||(dev&&dev.label)||(port?'HDMI '+port:id.replace(/_/g,' '))}}
+/* a name of your own for an input (config.json inputIcons.<id>.name, like its picture), else the name the TV gives it */
+function inputName(id){var ic=(typeof cfg==='object'&&cfg&&cfg.inputIcons)||{},n=(ic[id]||{}).name;return typeof n==='string'?n.slice(0,40):''}
 /* input-dock-end */
 function dockIds(){var by={};apps.forEach(function(a){by[a.id]=a});
   var ids=cfg.dock&&cfg.dock.length?cfg.dock:DEFAULTS.dock;
@@ -662,17 +666,32 @@ function title(id){if(isInputEntry(id)){var a=inputApp(id,inputs,inputsLoaded);r
 /* ---------- actions ---------- */
 function act(e){
   if(e._l)return lightAct(e);
-  if(e===heroEl)heroStop();
   var a=e._a;
-  if(a&&a.deck)return deckPlay(a.deck);
+  if(a&&a.deck)return zoomOpen(e,function(){deckPlay(a.deck)});
   if(a){
-    if(!a.sys){e.classList.add('launching');setTimeout(function(){e.classList.remove('launching')},4000)}
-    return launch(a.appId||a.id)}
+    if(a.sys)return launch(a.appId||a.id);
+    return zoomOpen(e,function(){launch(a.appId||a.id)})}
   var o=e._o||{};
   if(o.action==='customize')return customizeMenu();
   if(o.action==='live')return LIVE.enter();
   if(o.action==='inputs')return inputsMenu();
   if(o.app)launch(o.app,o.params)}
+
+/* ---------- opening a tile: it grows from where it is until it fills the screen, the rest fades, then the app opens. Transform
+   and opacity only; the theme's effects.speed scales it (0: no zoom). Back on Home everything is put back without animating. ---------- */
+var zoomT=0;
+function zoomOpen(e,go){
+  var spd=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spd'));if(isNaN(spd))spd=1;
+  var w=e.offsetWidth,h=e.offsetHeight;
+  if(!(spd>0)||!w||!h||document.body.classList.contains('zooming')){go();return}
+  var r=e.getBoundingClientRect(),k=Math.max(1920/w,1080/h)*1.02;
+  document.body.classList.add('zooming');e.classList.add('zoom');
+  e.style.transform='translate('+Math.round(960-(r.left+r.width/2))+'px,'+Math.round(540-(r.top+r.height/2))+'px) scale('+k.toFixed(3)+')';
+  setTimeout(go,Math.round(340*spd));
+  clearTimeout(zoomT);zoomT=setTimeout(zoomReset,8000)}   /* the app did not open: give Home back */
+function zoomReset(){
+  clearTimeout(zoomT);document.body.classList.remove('zooming');
+  [].forEach.call(document.querySelectorAll('.tile.zoom'),function(e){e.style.transition='none';e.classList.remove('zoom');e.style.transform='';void e.offsetWidth;e.style.transition=''})}
 
 /* ---------- menus ---------- */
 var stack=[], ovEl=null;
@@ -894,7 +913,7 @@ function wantInputs(){var p={};try{p=JSON.parse(webOSSystem.launchParams||'{}')}
 document.addEventListener('webOSRelaunch',function(){var p={};try{p=JSON.parse(webOSSystem.launchParams||'{}')}catch(e){}
   if(LIVE.on&&p&&p.guide&&liveOn()){LIVE.toggleGuide();return}   /* the Guide button while Live TV is open */
   if(LIVE.on)LIVE.exit();load();wantInputs()});
-document.addEventListener('visibilitychange',function(){if(document.hidden){heroStop();if(LIVE.on)LIVE.exit()}else{load();heroPlay()}});
+document.addEventListener('visibilitychange',function(){if(document.hidden){heroStop();if(LIVE.on)LIVE.exit()}else{zoomReset();load();heroPlay()}});
 
 function tick(){var d=new Date();
   try{$('time').textContent=d.toLocaleTimeString(LOC,clockOpts());$('date').textContent=d.toLocaleDateString(LOC,{weekday:'long',day:'numeric',month:'long'})}

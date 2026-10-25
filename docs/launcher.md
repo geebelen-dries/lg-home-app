@@ -50,8 +50,10 @@ To show a logo instead of the HDMI glyph (the logo of a set-top box, say), put a
 `/media/developer/cleanyourtv/icons/` and name it in `config.json` with the input's id and a background colour:
 
 ```json
-"inputIcons": { "HDMI_3": { "file": "box.png", "bg": "#ffffff" } }
+"inputIcons": { "HDMI_3": { "file": "box.png", "bg": "#ffffff", "name": "My TV box" } }
 ```
+
+`name` is optional: it replaces the name the TV gives the input on its tile.
 
 ## Plex On Deck
 
@@ -64,7 +66,7 @@ to play it on the TV's Plex app, as Plex's own cast button does, as soon as that
 shows one; it waits up to two minutes). **Customise → Plex → Sign out**
 forgets the token.
 
-## The hero layout: live input, rain, lights
+## The hero layout: live input, rain, scenes
 
 Themes with `home.layout` set to `hero` (Hero) show the first input in the dock large, with an information panel beside it.
 
@@ -74,10 +76,13 @@ Themes with `home.layout` set to `hero` (Hero) show the first input in the dock 
 - **Rain.** The forecast for the next six hours from [Open-Meteo](https://open-meteo.com) (free, no account): temperature, rain in mm
   or the chance of rain, and a line that says when rain starts or stops. The place is the one typed under *Place for the weather*
   on the phone setup page (manager app > Voice > Set up from your phone), or else the location set in your Home Assistant.
-- **Lights.** Up to seven lights from Home Assistant, with **All off**. OK switches a light. It uses the Home Assistant address and
+- **Scenes.** Up to seven scenes from Home Assistant, with **All off** (every light off). OK turns a scene on; the scene used
+  last is marked while lights are on, and the heading counts the lights that are on. It uses the Home Assistant address and
   access token from the same phone setup page; the token stays in the service and the page only gets names and states. Only
-  `light.*` entities can be switched. To pick which lights are shown, list their entity ids in `config.json` under
-  `home.lights`.
+  `scene.*` entities can be turned on. To pick which scenes are shown, and in which order, list their entity ids in
+  `config.json` under `home.scenes`.
+- **Opening.** OK on a tile makes it grow until it fills the screen, then the app or input opens (the theme's
+  `effects.speed` sets how fast; 0 opens it at once).
 - **Apps and Continue watching.** The other apps of the dock and the Plex On Deck cards share the row under the big tile; it scrolls
   sideways when the cards do not fit.
 
@@ -118,7 +123,7 @@ Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:
 | `sort` | `usage` or `alpha`. |
 | `clock` | `auto`, `12` or `24`. |
 | `weather` | `place`: the town for the rain forecast (set on the phone setup page); the service adds where it found it. |
-| `home` | `lights`: the Home Assistant light entity ids the Hero panel shows, in order (empty: the first seven by name). |
+| `home` | `scenes`: the Home Assistant scene entity ids the Hero panel shows, in order (empty: the first seven by name). |
 
 See [`config.example.json`](https://github.com/lasharor/cleanyourtv-WebOS/blob/main/config.example.json). Change settings in
 the launcher; the file is read and written by the service.

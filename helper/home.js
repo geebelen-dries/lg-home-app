@@ -1,15 +1,16 @@
-// The information panel of the home screen: the rain forecast for the coming hours and the lights in Home Assistant.
+// The information panel of the home screen: the rain forecast for the coming hours and the scenes in Home Assistant.
 // Weather comes from Open-Meteo (free, no account). The place is the one typed on the phone setup page (manager > Voice > Set up
 // from your phone), looked up with Open-Meteo's place search, or else the location of the user's Home Assistant.
-// Lights use the Home Assistant address and long-lived token that voice uses (config.json voice.ha); the token stays here.
-// API (loopback only): GET /api/weather, GET /api/lights, POST /api/lights/toggle {id}, POST /api/lights/off.
+// Scenes use the Home Assistant address and long-lived token that voice uses (config.json voice.ha); the token stays here. One
+// press turns a scene on; All off switches every light off.
+// API (loopback only): GET /api/weather, GET /api/scenes, POST /api/scenes/activate {id}, POST /api/lights/off.
 const https = require('https'), http = require('http');
 const nc = require('./netcompat'), { URL } = nc;
 
 const METEO = () => process.env.CYTV_METEO_URL || 'https://api.open-meteo.com';
 const GEO = () => process.env.CYTV_GEO_URL || 'https://geocoding-api.open-meteo.com';
-const MAX_JSON = 2 * 1024 * 1024, WEATHER_MS = 15 * 60000, LIGHTS_MS = 4000, MAX_LIGHTS = 7, HOURS = 12;
-const ENTITY = /^light\.[a-z0-9_]{1,80}$/;
+const MAX_JSON = 2 * 1024 * 1024, WEATHER_MS = 15 * 60000, SCENES_MS = 4000, MAX_SCENES = 7, HOURS = 12;
+const SCENE = /^scene\.[a-z0-9_]{1,80}$/;
 
 function request(method, url, hdrs, payload, ms, tls) {
   return new Promise((resolve, reject) => {
@@ -97,39 +98,44 @@ function create(ctx) {
     return wxP;
   }
 
-  // ---- lights ----
-  let lt = { at: 0, items: null };
-  async function lights(fresh) {
+  // ---- scenes ----
+  // the scenes to show (config home.scenes, else all by name), which one was turned on last, and how many lights are on
+  let sc = { at: 0, data: null };
+  async function scenes(fresh) {
     const h = haCfg();
     if (!h) return { off: true };
-    if (!fresh && lt.items && Date.now() - lt.at < LIGHTS_MS) return { items: lt.items };
-    const pick = (ctx.readConf().home || {}).lights;
-    const all = (await ha(h, 'GET', '/api/states')).filter(s => s && ENTITY.test(s.entity_id));
+    if (!fresh && sc.data && Date.now() - sc.at < SCENES_MS) return sc.data;
+    const pick = (ctx.readConf().home || {}).scenes, states = await ha(h, 'GET', '/api/states');
+    const all = states.filter(s => s && SCENE.test(s.entity_id));
     let list = Array.isArray(pick) && pick.length ? pick.map(id => all.find(s => s.entity_id === id)).filter(Boolean) : all.slice().sort((a, b) => name(a).localeCompare(name(b)));
-    list = list.slice(0, MAX_LIGHTS).map(s => ({ id: s.entity_id, name: name(s), on: s.state === 'on', off: s.state === 'unavailable', level: s.state === 'on' && typeof (s.attributes || {}).brightness === 'number' ? Math.round(s.attributes.brightness / 2.55) : null }));
-    lt = { at: Date.now(), items: list };
-    return { items: list };
+    list = list.slice(0, MAX_SCENES);
+    const lightsOn = states.filter(s => s && /^light\./.test(s.entity_id) && s.state === 'on').length;
+    // a scene's state is when it was last turned on; it counts as the current one only while some light is on
+    let last = null; for (const s of list) { const t = Date.parse(s.state); if (isFinite(t) && (!last || t > last.t)) last = { id: s.entity_id, t }; }
+    const data = { items: list.map(s => ({ id: s.entity_id, name: name(s), active: !!(lightsOn && last && last.id === s.entity_id), off: s.state === 'unavailable' })), lightsOn };
+    sc = { at: Date.now(), data };
+    return data;
   }
-  const name = s => String((s.attributes || {}).friendly_name || s.entity_id.slice(6).replace(/_/g, ' ').replace(/^./, ch => ch.toUpperCase())).slice(0, 40);
+  const name = s => String((s.attributes || {}).friendly_name || s.entity_id.replace(/^\w+\./, '').replace(/_/g, ' ').replace(/^./, ch => ch.toUpperCase())).slice(0, 40);
 
   async function handle(req, res, u, body) {
     const out = (o, code) => { res.writeHead(code || 200, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (u === '/api/weather') return out(await weather());
-    if (u === '/api/lights') { try { return out(await lights()); } catch (e) { return out({ error: e.message }, 502); } }
+    if (u === '/api/scenes') { try { return out(await scenes()); } catch (e) { return out({ error: e.message }, 502); } }
     if (req.method !== 'POST') { res.writeHead(404); return res.end(); }
     const b = await body(req), h = haCfg();
     if (!h) return out({ error: 'Home Assistant is not set up' }, 400);
     try {
-      if (u === '/api/lights/toggle') {
-        if (!ENTITY.test(String(b.id || ''))) return out({ error: 'not a light' }, 400);
-        await ha(h, 'POST', '/api/services/light/toggle', { entity_id: b.id });
+      if (u === '/api/scenes/activate') {
+        if (!SCENE.test(String(b.id || ''))) return out({ error: 'not a scene' }, 400);
+        await ha(h, 'POST', '/api/services/scene/turn_on', { entity_id: b.id });
       } else if (u === '/api/lights/off') {
         await ha(h, 'POST', '/api/services/light/turn_off', { entity_id: 'all' });
       } else { res.writeHead(404); return res.end(); }
-      return out(await lights(true));
+      return out(await scenes(true));
     } catch (e) { return out({ error: e.message }, 502); }
   }
-  return { handle, weather, lights };
+  return { handle, weather, scenes };
 }
 
 module.exports = { create, summary, shape, kind };

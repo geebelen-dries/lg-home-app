@@ -71,7 +71,7 @@ const SCHEMA = [
   ['hero.w', 'int', [480, 1400], 1040, 'Width of the large picture, in px; the height is 9/16 of it. The panel takes the width to its right.'],
   ['hero.live', 'bool', null, true, 'Show the input live in the large picture, with sound while it has the focus.'],
   ['panel.weather', 'bool', null, true, 'Show the rain forecast in the panel (place: manager > Voice > Set up from your phone, or Home Assistant\'s location).'],
-  ['panel.lights', 'bool', null, true, 'Show the Home Assistant lights in the panel.'],
+  ['panel.lights', 'bool', null, true, 'Show the Home Assistant scenes (and All off) in the panel.'],
   ['dock.anchor', 'enum', TOPBOT, 'top', 'Which screen edge `dock.y` counts from.'],
   ['dock.align', 'enum', POS, 'left', 'Which side `dock.x` counts from; `center` centres the dock.'],
   ['dock.x', 'int', [0, 900], 96, 'Distance from that side, in px.'],

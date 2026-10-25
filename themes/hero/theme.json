@@ -2,7 +2,7 @@
  "name": "Hero",
  "author": "CleanYourTV",
  "extends": "lift",
- "description": "Your TV input large and live, with the rain forecast and Home Assistant lights beside it; favourite apps and Plex On Deck in one row below.",
+ "description": "Your TV input large and live, with the rain forecast and Home Assistant scenes beside it; favourite apps and Plex On Deck in one row below.",
  "home": {
   "layout": "hero"
  },

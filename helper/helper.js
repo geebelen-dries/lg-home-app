@@ -100,7 +100,7 @@ try { theme = require('./theme').create({ readConf, writeConf, slug: () => { try
 // Plex On Deck on the home screen (signed in with a plex.tv/link code; the token stays in config.json)
 let plex = null;
 try { plex = require('./plex').create({ readConf, writeConf }); } catch (e) { console.error('plex module failed:', e.message); }
-// the information panel: rain forecast (Open-Meteo) and Home Assistant lights (the token voice uses stays here)
+// the information panel: rain forecast (Open-Meteo) and Home Assistant scenes (the token voice uses stays here)
 let home = null;
 try { home = require('./home').create({ readConf, writeConf }); } catch (e) { console.error('home module failed:', e.message); }
 // the photo behind the home screen, for themes that ask for one (effects.backdrop)
@@ -135,7 +135,7 @@ http.createServer(async (req, res) => {
     if (theme && u.startsWith('/api/theme/')) return theme.handle(req, res, u, body);
     if (backdrop && u.startsWith('/api/backdrop')) return backdrop.handle(req, res, u);
     if (plex && u.startsWith('/api/plex/')) return plex.handle(req, res, u, body);
-    if (home && (u === '/api/weather' || u === '/api/lights' || u.startsWith('/api/lights/'))) return home.handle(req, res, u, body);
+    if (home && (u === '/api/weather' || u === '/api/scenes' || u.startsWith('/api/scenes/') || u === '/api/lights/off')) return home.handle(req, res, u, body);
     // a picture for an input tile, named in config.json "inputIcons": {"HDMI_3": {"file": "x.png", "bg": "#ffffff"}}, kept in D/icons/
     let im = /^\/api\/input-icon\/([A-Z0-9_]{1,20})$/.exec(u);
     if (im) {

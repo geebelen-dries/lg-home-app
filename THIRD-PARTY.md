@@ -71,7 +71,7 @@ public domain.
 The Hero theme's rain forecast comes from the [Open-Meteo](https://open-meteo.com) API (`helper/home.js`), whose data is licensed
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the panel names Open-Meteo beside the place. Places typed on the phone setup
 page are looked up with Open-Meteo's geocoding API. Nothing from Open-Meteo is shipped. The screenshot `themes/hero/preview.jpg` shows
-made-up weather, lights and apps over the same public-domain photo as Lift's.
+made-up weather, scenes and apps over the same public-domain photo as Lift's.
 
 ## Design
 
