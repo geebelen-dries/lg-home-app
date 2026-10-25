@@ -387,6 +387,9 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   ok(hmR.j.items.length === 3 && hmR.j.items[0].name === 'Evening' && hmR.j.items[1].name === 'Movie' && hmR.j.items[1].active && !hmR.j.items[0].active && hmR.j.items[2].name === 'Old one' && hmR.j.items[2].off && hmR.j.lightsOn === 1 && hmR.out.indexOf('HATOK') < 0 && hmR.out.indexOf('boiler') < 0, 'the scenes are listed by name, the last one used is marked while a light is on, without the token or other devices');
   hmR = await hmCall('/api/scenes/activate', 'POST', { id: 'scene.evening' }); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/scene\/turn_on Bearer HATOK \{"entity_id":"scene.evening"\}/.test(h)), 'OK on a scene turns it on in Home Assistant');
   hmR = await hmCall('/api/scenes/activate', 'POST', { id: 'switch.boiler' }); ok(hmR.code === 400 && !hmHits.some(h => /boiler/.test(h) && /^POST/.test(h)), 'only scenes can be turned on');
+  hmR = await hmCall('/api/scenes/all'); ok(hmR.j.items.length === 3 && hmR.j.picked.length === 0, 'every scene is listed for choosing');
+  hmR = await hmCall('/api/scenes/pick', 'POST', { ids: ['scene.movie', 'switch.boiler', 'scene.evening'] });
+  ok(hmR.code === 200 && JSON.stringify(hmConf.home.scenes) === '["scene.movie","scene.evening"]' && hmR.j.items.map(x => x.name).join() === 'Movie,Evening', 'the chosen scenes are kept in config.json and shown in that order; other entities are dropped');
   hmR = await hmCall('/api/lights/off', 'POST'); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/light\/turn_off Bearer HATOK \{"entity_id":"all"\}/.test(h)), 'All off switches every light off');
   hmSrv.close(); delete process.env.CYTV_METEO_URL; delete process.env.CYTV_GEO_URL;
   const heroTh = themeMod.normalize({ home: { layout: 'hero' }, hero: { w: 1040, y: 136 }, dock: { anchor: 'bottom' } }, 'herotest');

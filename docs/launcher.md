@@ -79,8 +79,8 @@ Themes with `home.layout` set to `hero` (Hero) show the first input in the dock 
 - **Scenes.** Up to seven scenes from Home Assistant, with **All off** (every light off). OK turns a scene on; the scene used
   last is marked while lights are on, and the heading counts the lights that are on. It uses the Home Assistant address and
   access token from the same phone setup page; the token stays in the service and the page only gets names and states. Only
-  `scene.*` entities can be turned on. To pick which scenes are shown, and in which order, list their entity ids in
-  `config.json` under `home.scenes`.
+  `scene.*` entities can be turned on. **Customise → Scenes** lists every scene: OK shows or hides one (at most seven, in the order
+  you pick them; kept in `config.json` under `home.scenes`). With none picked, the first seven by name show.
 - **Opening.** OK on a tile makes it grow until it fills the screen, then the app or input opens (the theme's
   `effects.speed` sets how fast; 0 opens it at once).
 - **Apps and Continue watching.** The other apps of the dock and the Plex On Deck cards share the row under the big tile; it scrolls

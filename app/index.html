@@ -677,6 +677,18 @@ function act(e){
   if(o.action==='inputs')return inputsMenu();
   if(o.app)launch(o.app,o.params)}
 
+/* Customise > Scenes: every Home Assistant scene; OK adds it to the panel or takes it off (at most seven, in the order picked) */
+function scenesMenu(){api('/api/scenes/all').then(function(x){
+  if(!x||x.off)return toast(t('Connect Home Assistant in the manager app: Voice > Set up from your phone'));
+  if(x.error)return toast(x.error);
+  var picked=(x.picked||[]).slice();
+  function items(){return x.items.map(function(sc){var i=picked.indexOf(sc.id);
+    return {label:sc.name,stay:true,sub:i>=0?t('Shown')+' · '+(i+1):'',fn:function(){
+      var j=picked.indexOf(sc.id);if(j>=0)picked.splice(j,1);else if(picked.length<7)picked.push(sc.id);else return toast(t('Seven scenes at most: take one off first'));
+      api('/api/scenes/pick',{ids:picked}).then(function(){ltSig='';ltLoad()}).catch(function(){});
+      var m=stack[stack.length-1],k=m.idx;m.items=items();m.idx=k;drawMenu()}}})}
+  openMenu(t('Scenes (OK: show or hide)'),items())}).catch(function(){toast(t('Home Assistant did not answer'))})}
+
 /* ---------- opening a tile: it grows from where it is until it fills the screen, the rest fades, then the app opens. Transform
    and opacity only; the theme's effects.speed scales it (0: no zoom). Back on Home everything is put back without animating. ---------- */
 var zoomT=0;
@@ -758,6 +770,7 @@ function customizeMenu(){
     {label:t('Dock'),sub:t('apps and an input'),stay:true,fn:dockMenu},
     {label:t('Top buttons'),stay:true,fn:topButtonsMenu},
     {label:'Plex',sub:t('On Deck'),stay:true,fn:plexMenu},
+    {label:t('Scenes'),sub:'Home Assistant',stay:true,fn:scenesMenu},
     {label:t('Hidden apps'),stay:true,fn:hiddenMenu},
     {label:t('App order'),sub:cfg.sort==='alpha'?t('A to Z'):t('Most used first'),fn:function(){cfg.sort=cfg.sort==='alpha'?'usage':'alpha';saveCfg()}},
     {label:t('Clock'),sub:cfg.clock==='24'?t('24-hour'):cfg.clock==='12'?t('12-hour'):t('Automatic'),fn:function(){cfg.clock=cfg.clock==='24'?'12':cfg.clock==='12'?'auto':'24';saveCfg();tick()}},

@@ -3,7 +3,9 @@
 // from your phone), looked up with Open-Meteo's place search, or else the location of the user's Home Assistant.
 // Scenes use the Home Assistant address and long-lived token that voice uses (config.json voice.ha); the token stays here. One
 // press turns a scene on; All off switches every light off.
-// API (loopback only): GET /api/weather, GET /api/scenes, POST /api/scenes/activate {id}, POST /api/lights/off.
+// Which scenes show is chosen on the TV (Customise > Scenes) and kept in config.json home.scenes.
+// API (loopback only): GET /api/weather, GET /api/scenes, GET /api/scenes/all, POST /api/scenes/activate {id},
+// POST /api/scenes/pick {ids}, POST /api/lights/off.
 const https = require('https'), http = require('http');
 const nc = require('./netcompat'), { URL } = nc;
 
@@ -122,11 +124,22 @@ function create(ctx) {
     const out = (o, code) => { res.writeHead(code || 200, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (u === '/api/weather') return out(await weather());
     if (u === '/api/scenes') { try { return out(await scenes()); } catch (e) { return out({ error: e.message }, 502); } }
+    if (u === '/api/scenes/all') {   // every scene, for choosing; picked: the ones shown, in their order
+      const h = haCfg(); if (!h) return out({ off: true });
+      try {
+        const all = (await ha(h, 'GET', '/api/states')).filter(x => x && SCENE.test(x.entity_id)).map(x => ({ id: x.entity_id, name: name(x) })).sort((a, b) => a.name.localeCompare(b.name));
+        const pick = (ctx.readConf().home || {}).scenes; return out({ items: all, picked: Array.isArray(pick) ? pick : [] });
+      } catch (e) { return out({ error: e.message }, 502); }
+    }
     if (req.method !== 'POST') { res.writeHead(404); return res.end(); }
     const b = await body(req), h = haCfg();
     if (!h) return out({ error: 'Home Assistant is not set up' }, 400);
     try {
-      if (u === '/api/scenes/activate') {
+      if (u === '/api/scenes/pick') {   // the scenes to show, in order (empty: the first seven by name)
+        const ids = Array.isArray(b.ids) ? b.ids.filter(x => typeof x === 'string' && SCENE.test(x)).slice(0, MAX_SCENES) : null;
+        if (!ids) return out({ error: 'send {"ids": [...]}' }, 400);
+        const c = ctx.readConf(); c.home = Object.assign({}, c.home || {}, { scenes: ids }); ctx.writeConf(c); sc = { at: 0, data: null };
+      } else if (u === '/api/scenes/activate') {
         if (!SCENE.test(String(b.id || ''))) return out({ error: 'not a scene' }, 400);
         await ha(h, 'POST', '/api/services/scene/turn_on', { entity_id: b.id });
       } else if (u === '/api/lights/off') {
