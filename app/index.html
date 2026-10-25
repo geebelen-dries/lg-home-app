@@ -362,7 +362,7 @@ function clockOpts(){var c=cfg.clock,o={hour:'numeric',minute:'2-digit'};if(c===
 var apps=[], cfg={}, usage={}, warned=false, rows=[], r=1, c=0, colors={}, tiles={}, lastSig='', gSide=0, gColor='', gT=0, saveT=0;
 var inputs=[], inputsLoaded=false, inputsSig='';
 var DK=1, G=2, deckItems=[], deckSig='', PLEX_APP='cdp-30';
-var heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the lights */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
+var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the lights */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
 function $(id){return document.getElementById(id)}
 var toastT;
 function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},4000)}
@@ -539,14 +539,19 @@ function heroStop(){
   if(!hv)return;var v=hv;hv=null;
   try{v.pause();while(v.firstChild)v.removeChild(v.firstChild);v.removeAttribute('src');v.load()}catch(e){}
   if(v.parentNode)v.parentNode.removeChild(v);if(heroEl)heroEl.classList.remove('live')}
-function heroPlay(){
-  if(!heroEl||!TH.heroLive||!isHero()||document.hidden||LIVE.on||hv)return;
+/* force: Home is known to be in front (a key was pressed, or the system says so); right after a reload the page can report
+   itself hidden while it is on screen */
+function heroPlay(force){
+  if(!heroEl||!TH.heroLive||!isHero()||(document.hidden&&!force)||LIVE.on||hv)return;
   var a=heroEl._a,dev=a&&a.dev;if(!dev||!dev.port||!dev.hdmiPlugIn)return;
   var v=document.createElement('video'),s=document.createElement('source');v.autoplay=true;v.muted=true;
   s.src='ext://hdmi:'+dev.port;s.type='service/webos-external';v.appendChild(s);
   v.addEventListener('playing',function(){if(v===hv&&heroEl)heroEl.classList.add('live')});
-  v.addEventListener('error',function(){if(v===hv)heroStop()},true);   /* capture: a failing <source> does not bubble */
+  v.addEventListener('error',function(){heroLog('live picture failed: '+(v.error?v.error.code:'?'));if(v===hv){heroStop();if(heroTry++<3)setTimeout(function(){heroPlay(true)},4000)}},true);   /* capture: a failing <source> does not bubble; the input may still be busy */
+  v.addEventListener('playing',function(){heroTry=0;heroLog('live picture playing, HDMI '+dev.port)});
+  heroLog('live picture requested, HDMI '+dev.port);
   hv=v;heroEl.firstChild.appendChild(v);heroSound()}
+function heroLog(m){try{var x=new XMLHttpRequest();x.open('GET',API+'/api/log?m='+encodeURIComponent('hero: '+m));x.send()}catch(e){}}   /* into the service log (/tmp/cleanyourtv-helper.log) */
 function heroSound(){if(hv)hv.muted=!(rows[r]&&rows[r][c]===heroEl)}
 function heroDeco(d,a){
   if(!d._hx){var x=document.createElement('div');x.className='hx';x.innerHTML='<span class="hl">LIVE</span><div class="hb"><div class="hn"></div><div class="hs"></div></div>';d.appendChild(x);d._hx=x}
@@ -566,7 +571,8 @@ function drawWx(){
     x.hours.slice(0,6).forEach(function(o){h+='<div class="hr"><span>'+escH(o.t)+'</span><svg viewBox="0 0 24 24" class="'+escH(o.kind)+'">'+(ICONS[o.kind]||ICONS.cloud)+'</svg><b>'+escH(o.temp)+'°</b><i>'+(o.mm>=0.1?escH(o.mm)+' mm':escH(o.pc)+'%')+'</i></div>'});
     h+='</div>'}
   setHtml($('wx'),h)}
-function ltLoad(){heroPlay();if(!isHero()||document.body.getAttribute('data-lights')!=='show'||document.hidden)return;api('/api/lights').then(ltSet).catch(function(){})}
+function heroWake(){heroPlay();if(document.hidden&&isHero()&&heroEl&&!hv)api('/api/foreground').then(function(x){if(x&&x.appId==='com.webos.app.home')heroPlay(true)}).catch(function(){})}
+function ltLoad(){heroWake();if(!isHero()||document.body.getAttribute('data-lights')!=='show'||document.hidden)return;api('/api/lights').then(ltSet).catch(function(){})}
 function ltSet(x){
   if(!x||x.error)return;
   var items=x.items||[],sig=JSON.stringify(items.map(function(i){return i.id}))+(x.off?'off':'');ltOff=!!x.off;ltItems=items;
@@ -808,7 +814,7 @@ function rebuild(){
   var nr=first?(hero&&hrow.length&&heroEl?1:DK):Math.min(r,rows.length-1),nc=c;
   if(keep&&tiles[keep]){var p=posOf(tiles[keep]);if(p){nr=p[0];nc=p[1]}}
   setFocus(nr,nc,true);
-  if(hero){drawWx();heroPlay()}else heroStop()}
+  if(hero){drawWx();heroWake()}else heroStop()}
 
 function hasInputDock(){var d=cfg.dock||[];for(var i=0;i<d.length;i++)if(isInputEntry(d[i]))return true;return false}
 function load(){
@@ -851,6 +857,7 @@ document.addEventListener('mousemove',function(ev){
   if(p&&!(p[0]===r&&p[1]===c))setFocus(p[0],p[1])});
 
 document.addEventListener('keydown',function(e){
+  if(!hv&&heroEl)heroPlay(true);
   var k=e.keyCode;lastKey=Date.now();
   if(LIVE.on){LIVE.key(e);return}
   if(stack.length){
