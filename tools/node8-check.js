@@ -363,7 +363,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
       hmHits.push(q.method + ' ' + q.url + ' ' + (q.headers.authorization || '') + ' ' + b);
       const send = (o, code) => { rq.writeHead(code || 200, { 'content-type': 'application/json' }); rq.end(JSON.stringify(o)); };
       if (/^\/v1\/search/.test(q.url)) return send(/name=Nowhere/.test(q.url) ? { results: [] } : { results: [{ name: 'Ghent', latitude: 51.05, longitude: 3.72 }] });
-      if (/^\/v1\/forecast/.test(q.url)) return send({ current: { time: '2026-10-25T20:15', temperature_2m: 12.4, weather_code: 3 }, hourly: { time: ['2026-10-25T19:00', '2026-10-25T20:00', '2026-10-25T21:00', '2026-10-25T22:00'], temperature_2m: [13, 12.4, 11.6, 11], precipitation: [0, 0, 0, 0.8], precipitation_probability: [0, 5, 20, 80], weather_code: [3, 3, 3, 61] } });
+      if (/^\/v1\/forecast/.test(q.url)) return send({ current: { time: '2026-10-25T20:15', temperature_2m: 12.4, weather_code: 3 }, hourly: { time: ['2026-10-25T19:00', '2026-10-25T20:00', '2026-10-25T21:00', '2026-10-25T22:00'], temperature_2m: [13, 12.4, 11.6, 11], precipitation: [0, 0, 0, 0.8], precipitation_probability: [0, 5, 20, 80], weather_code: [3, 3, 0, 61], is_day: [1, 1, 0, 0] } });
       if (q.url === '/api/config') return q.headers.authorization === 'Bearer HATOK' ? send({ latitude: 50.85, longitude: 4.35, location_name: 'Home' }) : send({}, 401);
       if (q.url === '/api/states') return send([{ entity_id: 'light.kitchen', state: 'off', attributes: { friendly_name: 'Kitchen' } }, { entity_id: 'light.living', state: 'on', attributes: { friendly_name: 'Living room' } }, { entity_id: 'scene.movie', state: '2026-10-25T19:00:00+00:00', attributes: { friendly_name: 'Movie' } }, { entity_id: 'scene.evening', state: '2026-10-25T18:00:00+00:00', attributes: { friendly_name: 'Evening' } }, { entity_id: 'scene.old_one', state: 'unavailable', attributes: {} }, { entity_id: 'switch.boiler', state: 'on', attributes: {} }]);
       if (/^\/api\/services\/(light|scene)\//.test(q.url)) return send([]);
@@ -378,7 +378,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   hmR = await hmCall('/api/scenes'); ok(hmR.j.off === true, 'no Home Assistant: no scenes');
   hmConf = { voice: { ha: { url: hmBase, token: 'HATOK' } } };
   hmR = await hmCall('/api/weather');
-  ok(hmR.j.place === 'Home' && hmHits.some(h => /latitude=50\.85&longitude=4\.35/.test(h)) && hmR.j.hours[0].t === '20:00' && hmR.j.hours.length === 3 && hmR.j.now.temp === 12 && hmR.j.summary === 'Rain from 22:00' && hmR.j.hours[2].kind === 'rain', 'without a place the forecast is for Home Assistant\'s location, from this hour on');
+  ok(hmR.j.place === 'Home' && hmHits.some(h => /latitude=50\.85&longitude=4\.35/.test(h)) && hmR.j.hours[0].t === '20:00' && hmR.j.hours.length === 3 && hmR.j.now.temp === 12 && hmR.j.summary === 'Rain from 22:00' && hmR.j.hours[2].kind === 'rain' && hmR.j.hours[1].kind === 'night', 'without a place the forecast is for Home Assistant\'s location, from this hour on; a clear night is a moon');
   hmConf.weather = { place: 'Ghent' };
   await hmCall('/api/weather').then(() => {}); hmR = await hmCall('/api/weather');
   ok(hmR.j.place === 'Ghent' && hmConf.weather.lat === 51.05 && hmConf.weather.for === 'Ghent' && hmHits.some(h => /latitude=51\.05/.test(h)) && hmHits.filter(h => /\/v1\/search/.test(h)).length === 1, 'a typed place is looked up once and kept');

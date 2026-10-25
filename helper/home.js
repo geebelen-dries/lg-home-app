@@ -35,7 +35,7 @@ function request(method, url, hdrs, payload, ms, tls) {
 const json = r => { if (r.status < 200 || r.status >= 300) { const e = new Error('answered ' + r.status); e.status = r.status; throw e; } return JSON.parse(r.text); };
 
 // WMO weather codes in three kinds the launcher draws: rain (drizzle, rain, showers, thunder), snow, or dry (clear to overcast, fog)
-const kind = c => (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95 ? 'rain' : (c >= 71 && c <= 77) || c === 85 || c === 86 ? 'snow' : c <= 1 ? 'clear' : 'cloud';
+const kind = (c, night) => (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95 ? 'rain' : (c >= 71 && c <= 77) || c === 85 || c === 86 ? 'snow' : c <= 1 ? (night ? 'night' : 'clear') : 'cloud';
 const WET = 0.1;   // mm in an hour that counts as rain
 // one line for the top of the panel: when the rain starts or stops in the hours given ({t: 'HH:MM', mm})
 function summary(hours) {
@@ -50,10 +50,10 @@ function shape(j, nowIso) {
   const h = j && j.hourly || {}, t = h.time || [], out = [];
   const start = Math.max(0, t.findIndex(x => x >= nowIso));
   for (let i = start; i < t.length && out.length < HOURS; i++) {
-    out.push({ t: String(t[i]).slice(11, 16), temp: Math.round(Number(h.temperature_2m && h.temperature_2m[i])), mm: Math.round((Number(h.precipitation && h.precipitation[i]) || 0) * 10) / 10, pc: Number(h.precipitation_probability && h.precipitation_probability[i]) || 0, kind: kind(Number(h.weather_code && h.weather_code[i]) || 0) });
+    out.push({ t: String(t[i]).slice(11, 16), temp: Math.round(Number(h.temperature_2m && h.temperature_2m[i])), mm: Math.round((Number(h.precipitation && h.precipitation[i]) || 0) * 10) / 10, pc: Number(h.precipitation_probability && h.precipitation_probability[i]) || 0, kind: kind(Number(h.weather_code && h.weather_code[i]) || 0, h.is_day && h.is_day[i] === 0) });
   }
   const c = j && j.current || {};
-  return { now: { temp: Math.round(Number(c.temperature_2m)), kind: kind(Number(c.weather_code) || 0) }, hours: out, summary: summary(out) };
+  return { now: { temp: Math.round(Number(c.temperature_2m)), kind: kind(Number(c.weather_code) || 0, c.is_day === 0) }, hours: out, summary: summary(out) };
 }
 
 function create(ctx) {
@@ -90,7 +90,7 @@ function create(ctx) {
       if (!p) return { off: true };
       const key = p.lat.toFixed(3) + ',' + p.lon.toFixed(3);
       if (wx.data && wx.key === key && Date.now() - wx.at < WEATHER_MS) return Object.assign({ place: p.name }, wx.data);
-      const q = '/v1/forecast?latitude=' + p.lat + '&longitude=' + p.lon + '&current=temperature_2m,weather_code&hourly=temperature_2m,precipitation,precipitation_probability,weather_code&forecast_days=2&timezone=auto';
+      const q = '/v1/forecast?latitude=' + p.lat + '&longitude=' + p.lon + '&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,precipitation,precipitation_probability,weather_code,is_day&forecast_days=2&timezone=auto';
       return request('GET', METEO() + q, {}, undefined, 12000).then(json).then(j => {
         const d = shape(j, String(j.current && j.current.time || '').slice(0, 13));
         wx = { at: Date.now(), key, data: d, error: '' };
@@ -114,7 +114,10 @@ function create(ctx) {
     const lightsOn = states.filter(s => s && /^light\./.test(s.entity_id) && s.state === 'on').length;
     // a scene's state is when it was last turned on; it counts as the current one only while some light is on
     let last = null; for (const s of list) { const t = Date.parse(s.state); if (isFinite(t) && (!last || t > last.t)) last = { id: s.entity_id, t }; }
-    const data = { items: list.map(s => ({ id: s.entity_id, name: name(s), active: !!(lightsOn && last && last.id === s.entity_id), off: s.state === 'unavailable' })), lightsOn };
+    // scenes named after one room ("Bedroom Relax", "Bedroom Read"): the room goes in the heading, the tiles keep the rest
+    const names = list.map(name), first = names.length > 1 ? names[0].split(' ')[0] : '';
+    const room = first && names.every(n => n.split(' ')[0] === first && n.length > first.length + 1) ? first : '';
+    const data = { items: list.map((s, i) => ({ id: s.entity_id, name: room ? names[i].slice(room.length + 1).replace(/^./, ch => ch.toUpperCase()) : names[i], active: !!(lightsOn && last && last.id === s.entity_id), off: s.state === 'unavailable' })), lightsOn, room };
     sc = { at: Date.now(), data };
     return data;
   }

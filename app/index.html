@@ -167,7 +167,7 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 #wx .hr b{font-size:calc(24px*var(--fs));font-weight:600}
 #wx .hr i{font-style:normal;font-size:calc(18px*var(--fs));color:#a9d2ff}
 #wx svg{width:40px;height:40px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-#wx svg.rain,#wx svg.snow{stroke:#8cc4ff}#wx svg.clear{stroke:#ffd36b}#wx svg.cloud{stroke:#c9d3df}
+#wx svg.rain,#wx svg.snow{stroke:#8cc4ff}#wx svg.clear{stroke:#ffd36b}#wx svg.night{stroke:#d9dcff}#wx svg.cloud{stroke:#c9d3df}
 #ltrow{display:flex;flex-wrap:wrap}
 .tile.lt{width:calc((100% - 36px)/4);height:80px;margin:0 12px 10px 0;border-radius:16px;background:rgba(255,255,255,.07)}
 .tile.lt:nth-child(4n){margin-right:0}
@@ -326,6 +326,7 @@ var ICONS={
   rain:'<path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17.5 8 3.5 3.5 0 0 1 17 15z"/><path d="M9 18l-1 2M13 18l-1 2M17 18l-1 2"/>',
   snow:'<path d="M7 15a4 4 0 1 1 .9-7.9A5 5 0 0 1 17.5 8 3.5 3.5 0 0 1 17 15z"/><path d="M9 19h.01M13 20h.01M17 19h.01"/>',
   cloud:'<path d="M7 17a4 4 0 1 1 .9-7.9A5 5 0 0 1 17.5 10 3.5 3.5 0 0 1 17 17z"/>',
+  night:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
   clear:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
 };
 function svg(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||ICONS.grid)+'</svg>'}
@@ -365,7 +366,7 @@ function clockOpts(){var c=cfg.clock,o={hour:'numeric',minute:'2-digit'};if(c===
 var apps=[], cfg={}, usage={}, warned=false, rows=[], r=1, c=0, colors={}, tiles={}, lastSig='', gSide=0, gColor='', gT=0, saveT=0;
 var inputs=[], inputsLoaded=false, inputsSig='';
 var DK=1, G=2, deckItems=[], deckSig='', PLEX_APP='cdp-30';
-var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, ltOn=0, dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the scenes */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
+var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, ltOn=0, ltRoom='', dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the scenes */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
 function $(id){return document.getElementById(id)}
 var toastT;
 function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},4000)}
@@ -448,7 +449,7 @@ function tile(a){
   if(tiles[a.id]){   /* an input tile may have been built before its device arrived (placeholder name, no app id): refresh it */
     var done=tiles[a.id];
     if(a.deck){done._a=a;done._cap.textContent=deckCap(a.deck);done._pb.style.width=Math.round(a.deck.progress*100)+'%';return done}
-    if(a.input&&done._a&&done._a.title!==a.title){done._a=a;if(done._slab)done._slab.textContent=a.title;done._cap.textContent=a.title}
+    if(a.input&&done._a&&(done._a.title!==a.title||done._a.dev!==a.dev)){done._a=a;if(done._slab)done._slab.textContent=a.title;done._cap.textContent=a.title}
     return done}
   /* .in holds the picture (and clips it), .cap is the small name under the tile that some themes show on focus */
   var d=document.createElement('div');d.className='tile'+(a.sys?' sys':'');d._a=a;
@@ -582,7 +583,7 @@ function ltLoad(){heroWake();if(!isHero()||document.body.getAttribute('data-ligh
 /* Home Assistant scenes: one press turns a scene on; the last one used is marked while lights are on; All off ends them */
 function ltSet(x){
   if(!x||x.error)return;
-  var items=x.items||[],sig=JSON.stringify(items.map(function(i){return i.id}))+(x.off?'off':'');ltOff=!!x.off;ltItems=items;ltOn=x.lightsOn||0;
+  var items=x.items||[],sig=JSON.stringify(items.map(function(i){return i.id}))+(x.off?'off':'');ltOff=!!x.off;ltItems=items;ltOn=x.lightsOn||0;ltRoom=x.room||'';
   if(sig!==ltSig){ltSig=sig;rebuild();return}
   ltPaintAll()}
 function ltTile(l){var d=document.createElement('div');d.className='tile lt';d._l=l;d.innerHTML='<div class="in">'+svg(l.all?'power':'scene')+'<span class="ln"></span></div>';hit(d);ltPaint(d);return d}
@@ -593,7 +594,7 @@ function ltPaint(d){
 function ltPaintAll(){
   [].forEach.call($('ltrow').children,function(d){if(d._l)ltPaint(d)});
   $('ltsub').textContent=ltOff||!ltItems.length?'':ltOn?ltOn+' '+(ltOn===1?t('light on'):t('lights on')):t('all lights off');
-  $('lth').textContent=t('Scenes')}
+  $('lth').textContent=t('Scenes')+(ltRoom?' \u00B7 '+ltRoom:'')}
 function lightAct(d){
   var l=d._l;if(!l.all&&l.off)return;
   ltItems.forEach(function(x){x.active=!l.all&&x.id===l.id});if(l.all)ltOn=0;ltPaintAll();   /* show it at once; the answer corrects it */
