@@ -13,7 +13,7 @@ if grep -q " $H " /proc/mounts; then
   sh $L/reload-home.sh
   exit 0
 fi
-mount --bind $L/home-overlay $H && { (sleep 3; pkill -9 -f /usr/palm/applications/airplay/LunaExecutable) </dev/null >/dev/null 2>&1 & systemctl restart sam; }
+mount --bind $L/home-overlay $H && sh $L/restart-sam.sh
 # After the sam restart nothing is in the foreground (black screen). Once sam is back, start Home again
 # unless the user already went somewhere else (e.g. an HDMI input).
 (

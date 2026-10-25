@@ -40,9 +40,7 @@ ensure_apps() {
   [ $NOTIFY_CHANGED = 1 ] && missing=1
   [ $missing = 0 ] && return 0
   say "registering the overlay apps (the screen blinks once)"
-  (sleep 3; pkill -9 -f /usr/palm/applications/airplay/LunaExecutable) </dev/null >/dev/null 2>&1 &
-  systemctl restart sam
-  for i in $(seq 1 60); do systemctl is-active sam >/dev/null && break; sleep 2; done
+  sh $S/scripts/restart-sam.sh
   sleep 10
   pkill -f "[a]pp-id=com.webos.app.home"; sleep 2
   luna-send -n 1 -w 10000 -f luna://com.webos.applicationManager/launch '{"id":"com.webos.app.home"}' </dev/null >/dev/null

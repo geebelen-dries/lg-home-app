@@ -89,4 +89,7 @@ sh tools/diagnose.sh <tv-ip> > cytv-diagnose.txt   # read-only report from a TV 
   from somewhere else (themes are read from GitHub for that reason).
 - Update checks and downloads must always end: a dropped connection emits `aborted` on the response, not an error on the request.
 - webOS 5's Chromium can leave old text in the compositor when a list is redrawn: the launcher swaps elements instead of rewriting them.
+- Restarting `sam` (the system app manager) alone leaves `umediaserver` treating no app as in front: every video, HDMI included,
+  stays black (`com.webos.service.videooutput/getStatus` shows `connected: false`). Restart `sam` only through
+  `scripts/restart-sam.sh`, which restarts the media server after it.
 - Themes are data; a theme must never contain CSS or script. The schema in `helper/theme.js` is the only source of what a theme can set.

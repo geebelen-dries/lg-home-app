@@ -274,6 +274,13 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   // the service ships no themes
   ok(!/themes/.test(fs.readFileSync(path.join(root, 'ipk', 'build.py'), 'utf8').replace(/#.*$/gm, '')) && !/themes/.test(fs.readFileSync(path.join(root, 'scripts', 'bootstrap.sh'), 'utf8').replace(/#.*$/gm, '')), 'the package build and the setup do not ship or copy themes');
 
+  // restarting the system app manager leaves the media server treating no app as in front (black video everywhere):
+  // every restart goes through scripts/restart-sam.sh, which restarts the media server after it
+  const shDir = path.join(root, 'scripts'), shText = n => fs.readFileSync(path.join(shDir, n), 'utf8').replace(/#.*$/gm, '');
+  const rsam = shText('restart-sam.sh');
+  ok(fs.readdirSync(shDir).filter(n => n !== 'restart-sam.sh').every(n => !/systemctl\s+restart\s+sam\b/.test(shText(n))) && rsam.indexOf('systemctl restart umediaserver') > rsam.indexOf('systemctl restart sam') && rsam.indexOf('systemctl restart sam') >= 0,
+    'only scripts/restart-sam.sh restarts the app manager, and it restarts the media server after it');
+
   // 9b. The backdrop photo: picked from Wikimedia Commons' featured nature pictures (a stand-in here), only wide pictures with a licence,
   // served by its own name only, and nothing fetched while the theme does not use it
   const bdMod = require(path.join(helper, 'backdrop'));

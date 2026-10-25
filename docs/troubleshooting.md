@@ -2,6 +2,9 @@
 
 - **Black screen after switching or rebooting.** Wait a minute; if it stays black, restart the TV. If the new Home does not come
   up, the setup removes the boot scripts and restarts the TV with LG's Home by itself.
+- **Apps and HDMI inputs play with a black picture** (their menus and subtitles show, the video does not). Versions up to 1.6.0
+  restarted LG's app manager without the media server, which then treats no app as in front and never connects video to the
+  screen. Fixed: the setup now restarts both. On an older version, restart the TV.
 - **The Home button opens LG's full-screen Home, not CleanYourTV.** Some TVs have a Home Style setting. Set TV Settings > General >
   Home Settings > Home Style to Basic.
 - **An app is missing from the grid.** Check **Hidden apps** in Customise. Apps without a launch icon are not listed.
