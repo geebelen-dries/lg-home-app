@@ -115,7 +115,7 @@ function build(){
       rows.push({label:'Send the text to',sub:v.url?v.url.replace(/^(https?:\/\/[^\/]+).*/,'$1'):'not set · shows a card only',fn:function(){
         kText='Set the address of your server (from a shell on the TV):\n\ncurl -X POST localhost:8765/api/voice/set -d \'{"url":"http://server:port/path","token":"optional secret"}\'\n\nThe TV sends: POST, JSON {"text":"..."}, with \"Authorization: Bearer <token>\" when a token is set. If your server answers with JSON {"text":"..."} (or plain text), the answer is shown as a card. Only the recognised text is sent, never audio.';push('voicehow')}});
     rows.push({sep:true});
-    rows.push({label:'Set up from your phone',sub:'key, model, Home Assistant, server',fn:openPair});
+    rows.push({label:'Set up from your phone',sub:'key, model, Home Assistant, weather place, server',fn:openPair});
     rows.push({label:'Set up with commands',sub:'for scripts and ssh',fn:function(){kText=aiHelp();push('voicehow')}});
     rows.push({label:'Forget the conversation',fn:function(){api('/api/voice/forget',{}).then(function(){banner('Conversation cleared','ok')},function(){banner('The service did not answer','err')})}});
     if(v.installed){
@@ -218,7 +218,7 @@ var INFO={
  'Install voice':'Downloads the speech engine, a 64-bit C library and the model (checksums are verified), then tests them. About a minute. Nothing is installed in the system folders.',
  'Listen on the voice button':'On: pressing the button you learned starts listening. A card shows what was heard.',
  'AI chat (OpenRouter)':'On: what you say is also sent as text to a language model through OpenRouter and the answer is shown on screen. Needs your OpenRouter key; the text goes to OpenRouter and the model provider, never audio.',
- 'Set up from your phone':'Shows a QR code. Scan it with a phone on the same Wi-Fi to enter your OpenRouter key, choose a model, write instructions and set a server address. Nothing is typed on the TV.',
+ 'Set up from your phone':'Shows a QR code. Scan it with a phone on the same Wi-Fi to enter your OpenRouter key, choose a model, write instructions, connect Home Assistant, set the place for the weather and set a server address. Nothing is typed on the TV.',
  'Model':'Choose the model that answers. The list is read from OpenRouter: the newest models of the main providers, with the price per million words in. The phone page lists every model.',
  'Set up with commands':'Shows the commands to set the key, model and instructions from a shell, and how to ask by text.',
  'Forget the conversation':'The AI and Home Assistant remember the last turns for ten minutes. This clears them.',

@@ -33,6 +33,7 @@ folder of the GitHub repository (the `main` branch):
 | Large print | Eight columns of big tiles and larger text. |
 | Still | No animation and a quiet glow. |
 | Bloom | A flower wallpaper with the dock in a glass panel at the bottom. Down moves the dock up and the apps appear below it, centred. |
+| Hero | Your TV input large and live (sound while it has the focus), the rain forecast and your Home Assistant lights beside it, and the other dock apps and Plex On Deck in one row below. Extends Lift. |
 | Lift | Wide 16:9 tiles, five to a row, that lift with a shadow when focused, the app's name in small text under it, a nature photo behind them that changes every few hours, Plex On Deck above the dock (Customise > Plex to sign in) and the Inter typeface. Down moves the row up and the apps appear below it. |
 
 ![Classic, Compact, Large print and Midnight](screenshots/themes-1.jpg)
@@ -176,6 +177,16 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | **ondeck** | | | |
 | `ondeck.show` | `true` or `false` | `false` | Show Plex On Deck as a row of cards above the dock, once Plex is signed in (Customise > Plex). |
 | `ondeck.y` | 0 to 900 | `440` | Distance of the On Deck row (its heading) from the top edge, in px. |
+| **home** | | | |
+| `home.layout` | `dock`, `hero` | `dock` | `hero`: a large picture of the first input in the dock (live when `hero.live`) with an information panel beside it; the other dock apps and Plex On Deck share one row under it. |
+| **hero** | | | |
+| `hero.x` | 0 to 900 | `96` | Distance of the large picture from the left edge, in px (`hero` layout). |
+| `hero.y` | 0 to 900 | `136` | Distance of the large picture from the top edge, in px. |
+| `hero.w` | 480 to 1400 | `1040` | Width of the large picture, in px; the height is 9/16 of it. The panel takes the width to its right. |
+| `hero.live` | `true` or `false` | `true` | Show the input live in the large picture, with sound while it has the focus. |
+| **panel** | | | |
+| `panel.weather` | `true` or `false` | `true` | Show the rain forecast in the panel (place: manager > Voice > Set up from your phone, or Home Assistant's location). |
+| `panel.lights` | `true` or `false` | `true` | Show the Home Assistant lights in the panel. |
 | **dock** | | | |
 | `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. |
 | `dock.align` | `left`, `center`, `right` | `left` | Which side `dock.x` counts from; `center` centres the dock. |

@@ -65,6 +65,13 @@ const SCHEMA = [
   ['shelf.scale', 'num', [0.4, 1.6], 1, 'Scale of the name.'],
   ['ondeck.show', 'bool', null, false, 'Show Plex On Deck as a row of cards above the dock, once Plex is signed in (Customise > Plex).'],
   ['ondeck.y', 'int', [0, 900], 440, 'Distance of the On Deck row (its heading) from the top edge, in px.'],
+  ['home.layout', 'enum', ['dock', 'hero'], 'dock', '`hero`: a large picture of the first input in the dock (live when `hero.live`) with an information panel beside it; the other dock apps and Plex On Deck share one row under it.'],
+  ['hero.x', 'int', [0, 900], 96, 'Distance of the large picture from the left edge, in px (`hero` layout).'],
+  ['hero.y', 'int', [0, 900], 136, 'Distance of the large picture from the top edge, in px.'],
+  ['hero.w', 'int', [480, 1400], 1040, 'Width of the large picture, in px; the height is 9/16 of it. The panel takes the width to its right.'],
+  ['hero.live', 'bool', null, true, 'Show the input live in the large picture, with sound while it has the focus.'],
+  ['panel.weather', 'bool', null, true, 'Show the rain forecast in the panel (place: manager > Voice > Set up from your phone, or Home Assistant\'s location).'],
+  ['panel.lights', 'bool', null, true, 'Show the Home Assistant lights in the panel.'],
   ['dock.anchor', 'enum', TOPBOT, 'top', 'Which screen edge `dock.y` counts from.'],
   ['dock.align', 'enum', POS, 'left', 'Which side `dock.x` counts from; `center` centres the dock.'],
   ['dock.x', 'int', [0, 900], 96, 'Distance from that side, in px.'],
@@ -243,13 +250,15 @@ function resolve(t, accent) {
     '--grid-t': px(gridY - viewTop), '--tile-w': px(Math.floor((v['grid.width'] - (v['grid.cols'] - 1) * v['grid.gapX']) / v['grid.cols'])), '--grid-fs': String(v['grid.focusScale']), '--grid-lift': px(-v['grid.lift']), '--ov-dim': String(v['grid.overlayDim']),
     '--icon-h': v['tile.iconSize'] + '%', '--icon-w': Math.min(90, Math.round(46 * v['tile.iconSize'] / 56)) + '%', '--deck-t': px(v['ondeck.y'] - viewTop),
     '--gloss': String(v['tile.gloss']), '--tile-border': String(v['tile.border']), '--ring-w': px(v['tile.ringWidth']), '--ring-off': px(v['tile.ringOffset']),
+    '--hero-l': px(v['hero.x']), '--hero-t': px(v['hero.y']), '--hero-w': px(v['hero.w']), '--hero-h': px(Math.round(v['hero.w'] * 9 / 16)),
+    '--panel-l': px(v['hero.x'] + v['hero.w'] + 40), '--panel-w': px(Math.max(300, 1920 - 96 - v['hero.x'] - v['hero.w'] - 40)),
     '--glow-op': String(v['effects.glow']), '--bd-dim': String(v['effects.backdropDim']), '--spd': String(v['effects.speed']),
   };
   const w = v['effects.wallpaper'];
   return {
     id: t.id, name: t.name, vars,
-    attrs: { bar: v['bar.style'], labels, clock: v['clock.layout'], grid: mode, galign: v['grid.align'], gicon: v['grid.icon'], focus: v['tile.focus'], tlabel: v['tile.label'], glow: v['effects.glowShape'], font: v['type.font'], backdrop: v['effects.backdrop'], deck: v['ondeck.show'] ? 'show' : 'hide' },
-    cols: v['grid.cols'], tileH: v['grid.tileH'], gapY: v['grid.gapY'], gt: gridY - viewTop, viewH: 1080 - viewTop, dockN: v['dock.count'], overlay, push: push ? { up: Math.max(0, dockTop - v['grid.dockUp']), gridTop: gridY } : null, overlayH: v['grid.overlayH'], backdropHours: v['effects.backdropHours'], iconH: v['tile.iconSize'],
+    attrs: { bar: v['bar.style'], labels, clock: v['clock.layout'], grid: mode, galign: v['grid.align'], gicon: v['grid.icon'], focus: v['tile.focus'], tlabel: v['tile.label'], glow: v['effects.glowShape'], font: v['type.font'], backdrop: v['effects.backdrop'], deck: v['ondeck.show'] ? 'show' : 'hide', layout: v['home.layout'], weather: v['panel.weather'] ? 'show' : 'hide', lights: v['panel.lights'] ? 'show' : 'hide' },
+    cols: v['grid.cols'], tileH: v['grid.tileH'], gapY: v['grid.gapY'], gt: gridY - viewTop, viewH: 1080 - viewTop, dockN: v['dock.count'], overlay, push: push ? { up: Math.max(0, dockTop - v['grid.dockUp']), gridTop: gridY } : null, overlayH: v['grid.overlayH'], backdropHours: v['effects.backdropHours'], heroLive: v['hero.live'], iconH: v['tile.iconSize'],
     glowRgb: v['effects.glowColor'] === 'accent' ? rgb(A).join(',') : '', nightRgb: night.join(','), wallpaper: w ? { id: t.id, file: w, dim: v['effects.wallpaperDim'] } : null,
   };
 }

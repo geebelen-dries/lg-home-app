@@ -61,6 +61,23 @@ computer; no password is typed on the TV. The TV keeps the token in `config.json
 and their pictures come from your server on the local network. OK on a card opens Plex. **Customise → Plex → Sign out**
 forgets the token.
 
+## The hero layout: live input, rain, lights
+
+Themes with `home.layout` set to `hero` (Hero) show the first input in the dock large, with an information panel beside it.
+
+- **Live picture.** The input plays in the big tile; its sound plays only while the tile has the focus. OK opens the input full
+  screen. The picture is released whenever Home is not in front, so it never competes with an app's video. Without a signal,
+  or when the TV refuses the picture, the tile shows the input's logo instead.
+- **Rain.** The forecast for the next six hours from [Open-Meteo](https://open-meteo.com) (free, no account): temperature, rain in mm
+  or the chance of rain, and a line that says when rain starts or stops. The place is the one typed under *Place for the weather*
+  on the phone setup page (manager app > Voice > Set up from your phone), or else the location set in your Home Assistant.
+- **Lights.** Up to seven lights from Home Assistant, with **All off**. OK switches a light. It uses the Home Assistant address and
+  access token from the same phone setup page; the token stays in the service and the page only gets names and states. Only
+  `light.*` entities can be switched. To pick which lights are shown, list their entity ids in `config.json` under
+  `home.lights`.
+- **Apps and Continue watching.** The other apps of the dock and the Plex On Deck cards share the row under the big tile; it scrolls
+  sideways when the cards do not fit.
+
 ## Inputs
 
 The **Inputs** button lists HDMI inputs by the names LG shows, with what is connected and a marker on the active one. OK
@@ -97,6 +114,8 @@ Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:
 | `hidden` | App ids you hid. |
 | `sort` | `usage` or `alpha`. |
 | `clock` | `auto`, `12` or `24`. |
+| `weather` | `place`: the town for the rain forecast (set on the phone setup page); the service adds where it found it. |
+| `home` | `lights`: the Home Assistant light entity ids the Hero panel shows, in order (empty: the first seven by name). |
 
 See [`config.example.json`](https://github.com/lasharor/cleanyourtv-WebOS/blob/main/config.example.json). Change settings in
 the launcher; the file is read and written by the service.

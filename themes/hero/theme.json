@@ -1,0 +1,33 @@
+{
+ "name": "Hero",
+ "author": "CleanYourTV",
+ "extends": "lift",
+ "description": "Your TV input large and live, with the rain forecast and Home Assistant lights beside it; favourite apps and Plex On Deck in one row below.",
+ "home": {
+  "layout": "hero"
+ },
+ "hero": {
+  "x": 96,
+  "y": 136,
+  "w": 1000,
+  "live": true
+ },
+ "clock": {
+  "y": 48
+ },
+ "dock": {
+  "y": 120,
+  "count": 3,
+  "w": 240,
+  "h": 176,
+  "gap": 32,
+  "lift": 6,
+  "focusScale": 1.06
+ },
+ "effects": {
+  "backdropDim": 0.55
+ },
+ "grid": {
+  "y": 1020
+ }
+}

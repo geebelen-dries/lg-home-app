@@ -360,7 +360,9 @@ function applySet(b) {
     if (b.ha.url !== undefined || b.ha.agent !== undefined || b.ha.clear) haConv = null;
     v.ha = h;
   }
-  const conf = ctx.readConf(); conf.voice = v; ctx.writeConf(conf); syncLg();
+  const conf = ctx.readConf(); conf.voice = v;
+  if (typeof b.weatherPlace === 'string') { const wp = b.weatherPlace.trim().slice(0, 100); if (wp !== String((conf.weather || {}).place || '')) conf.weather = wp ? { place: wp } : {}; }   // looked up by home.js
+  ctx.writeConf(conf); syncLg();
   return '';
 }
 
@@ -411,6 +413,7 @@ function pairPage(msg, done, list, token) {
 <label>Home Assistant access token <small>(a long-lived token from your profile page${ha.token ? '; one is saved, leave empty to keep it' : ''})</small></label><input name=hatoken type=password autocomplete=off>
 <label class=c><input type=checkbox name=hass value=1 ${ha.selfSigned ? 'checked' : ''}> Accept a self-signed certificate</label>
 <label>Which answers first</label><select name=haroute>${[['ha-first', 'Home Assistant first, then the AI'], ['ha-only', 'Home Assistant only'], ['ai-only', 'The AI only']].map(x => `<option value="${x[0]}"${ha.route === x[0] ? ' selected' : ''}>${x[1]}</option>`).join('')}</select>
+<label>Place for the weather on the home screen <small>(a town; empty: the location of Home Assistant)</small></label><input name=wplace autocomplete=off value="${esc(((ctx.readConf().weather || {}).place) || '')}">
 <label>Send the text to your own server <small>(optional)</small></label><input name=url type=url placeholder="http://..." value="${esc(c.url)}">
 <label>Server token <small>(optional${c.token ? '; one is saved, leave empty to keep it' : ''})</small></label><input name=token type=password autocomplete=off>
 <button>Save</button></form>`}`;
@@ -432,6 +435,7 @@ function startPair() {
         if (f.get('key')) set.llm.key = f.get('key');
         if (f.get('token')) set.token = f.get('token');
         if (!set.url) set.url = '';
+        set.weatherPlace = f.get('wplace') || '';
         const err = applySet(set);
         if (err) return send(400, pairPage(err, false, list, token));
         pairedAt = Date.now(); send(200, pairPage('Saved. You can close this page.', true, [], token));

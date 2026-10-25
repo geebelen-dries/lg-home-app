@@ -56,6 +56,17 @@ Signed in to Plex (Customise > Plex: enter the code shown at plex.tv/link), the 
 
 Folder: [`lift/`](lift/)
 
+### Hero
+
+Your TV input large and live, like LG's own Home did: the first input in the dock (Customise > Dock > An input...) fills the big
+picture and plays its sound while it has the focus; OK shows it full screen. Beside it, the rain forecast for the coming hours and
+your Home Assistant lights (OK switches one, All off switches them all). Below, the other dock apps and Plex On Deck share one row;
+Down again shows every app. Extends Lift.
+
+[![Hero](hero/preview.jpg)](hero/preview.jpg)
+
+Folder: [`hero/`](hero/)
+
 ### Compact
 
 Twelve columns of smaller tiles: more apps on screen.

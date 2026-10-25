@@ -66,6 +66,13 @@ those licences ask. The screenshot `themes/lift/preview.jpg` contains
 [Lindenstumpf, Panorama, 2](https://commons.wikimedia.org/wiki/File:Lindenstumpf,_Panorama,_2.jpg) by Rainer Lippert, released into the
 public domain.
 
+## Weather (Open-Meteo)
+
+The Hero theme's rain forecast comes from the [Open-Meteo](https://open-meteo.com) API (`helper/home.js`), whose data is licensed
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); the panel names Open-Meteo beside the place. Places typed on the phone setup
+page are looked up with Open-Meteo's geocoding API. Nothing from Open-Meteo is shipped. The screenshot `themes/hero/preview.jpg` shows
+made-up weather, lights and apps over the same public-domain photo as Lift's.
+
 ## Design
 
 The home-screen design follows the Android TV project [CleanYourTV](https://github.com/Gathin23/cleanyourtv) (MIT).
