@@ -168,12 +168,12 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 #wx .hr i{font-style:normal;font-size:calc(18px*var(--fs));color:#a9d2ff}
 #wx svg{width:40px;height:40px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #wx svg.rain,#wx svg.snow{stroke:#8cc4ff}#wx svg.clear{stroke:#ffd36b}#wx svg.night{stroke:#d9dcff}#wx svg.cloud{stroke:#c9d3df}
-#ltrow{display:flex;flex-wrap:wrap}
-.tile.lt{width:calc((100% - 36px)/4);height:80px;margin:0 12px 10px 0;border-radius:16px;background:rgba(255,255,255,.07)}
-.tile.lt:nth-child(4n){margin-right:0}
-.tile.lt .in{flex-direction:column;align-items:flex-start;justify-content:space-between;padding:9px 14px;box-sizing:border-box}
-.tile.lt svg{width:22px;height:22px}
-.tile.lt .ln{font-size:calc(20px*var(--fs));font-weight:500;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ltclip{overflow:hidden;margin:-8px -8px 0;padding:8px}
+#ltrow{display:flex;transition:transform calc(.25s*var(--spd)) ease-out}   /* one row of large buttons; it slides along with the focus */
+.tile.lt{flex:none;width:176px;height:168px;margin:0 16px 0 0;border-radius:16px;background:rgba(255,255,255,.07)}
+.tile.lt .in{flex-direction:column;align-items:flex-start;justify-content:space-between;padding:18px 18px 16px;box-sizing:border-box}
+.tile.lt svg{width:40px;height:40px}
+.tile.lt .ln{font-size:calc(24px*var(--fs));font-weight:500;line-height:1.15;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tile.lt.on{background:#ffc861;color:#2a1c00}
 .tile.lt.on svg{stroke:#2a1c00}
 .tile.lt.na{opacity:.5}
@@ -298,7 +298,7 @@ svg.st{width:26px;height:26px;fill:#ffcc4d;flex:none}.crow.f svg.st{fill:#c98a00
 <div class="glow" id="gA"></div><div class="glow" id="gB"></div><div id="credit"></div>
 <div id="top"><div id="clock"><div id="time"></div><div id="date"></div></div><div id="bar"></div></div>
 <div id="shelf"><div id="name"></div></div>
-<div id="hero"></div><div id="panel"><div class="pn" id="wx"></div><div class="pn" id="lt"><div class="ph"><b id="lth">Scenes</b><span id="ltsub"></span></div><div id="ltrow"></div></div></div>
+<div id="hero"></div><div id="panel"><div class="pn" id="wx"></div><div class="pn" id="lt"><div class="ph"><b id="lth">Scenes</b><span id="ltsub"></span></div><div id="ltclip"><div id="ltrow"></div></div></div></div>
 <div id="view"><div id="scroll"><div id="deck"><div class="dh">On Deck</div><div id="deckrow"></div></div><div id="dock"></div><div id="grid"></div></div></div>
 <div id="lv"><div id="lv-stage"></div><div id="lv-spin" class="layer"></div><div id="lv-osd" class="layer"><img class="logo" id="lv-ologo" alt=""><div class="num" id="lv-onum"></div><div class="info"><div class="name" id="lv-oname"></div><div class="now" id="lv-onow"></div><div class="next" id="lv-onext"></div><div class="facts" id="lv-ofacts"></div><div class="pbar"><i id="lv-obar"></i></div></div></div><div id="lv-numin" class="layer"></div><div id="lv-guide" class="layer"><div id="lv-glow"></div><div id="lv-gtop"><div id="lv-gtitle"></div><div id="lv-gtabs"></div><input id="lv-search" type="text" autocomplete="off"><div id="lv-gclock"></div></div><div id="lv-rows"></div><div id="lv-detail"></div></div><div id="lv-filter" class="layer"></div><div id="lv-menu" class="layer"></div><div id="lv-msg" class="layer"></div><div id="lv-tune" class="layer"></div><div id="lv-toast" class="layer"></div><div id="lv-stats" class="layer"></div></div>
 <div id="toast"></div>
@@ -367,7 +367,7 @@ function clockOpts(){var c=cfg.clock,o={hour:'numeric',minute:'2-digit'};if(c===
 var apps=[], cfg={}, usage={}, warned=false, rows=[], r=1, c=0, colors={}, tiles={}, lastSig='', gSide=0, gColor='', gT=0, saveT=0;
 var inputs=[], inputsLoaded=false, inputsSig='';
 var DK=1, G=2, deckItems=[], deckSig='', PLEX_APP='cdp-30';
-var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, ltOn=0, ltRoom='', dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the scenes */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
+var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, ltOn=0, ltRoom='', ltX=0, dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the scenes */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
 function $(id){return document.getElementById(id)}
 var toastT;
 function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},4000)}
@@ -569,6 +569,10 @@ function dockShift(){
   if(r!==DK)return;var e=rows[r][c],x=e.offsetLeft,w=e.offsetWidth,W=1728;
   if(x+w+dkShift>W)dkShift=W-(x+w);if(x+dkShift<0)dkShift=-x;
   $('dock').style.transform=dkShift?'translateX('+dkShift+'px)':''}
+function ltShift(){   /* the scenes row slides so the focused button is in view */
+  var e=rows[r]&&rows[r][c],lr=$('ltrow');if(!e||!e._l){if(!(rows[r]&&rows[r].indexOf(heroEl)>=0))return;lr.style.transform='';ltX=0;return}
+  var x=e.offsetLeft,w=e.offsetWidth,W=lr.parentNode.clientWidth-16;
+  if(x+w+ltX>W)ltX=W-(x+w);if(x+ltX<0)ltX=-x;lr.style.transform=ltX?'translateX('+ltX+'px)':''}
 function wxLoad(){if(!isHero()||document.body.getAttribute('data-weather')!=='show')return;api('/api/weather').then(function(x){wxData=x;drawWx()}).catch(function(){})}
 function drawWx(){
   var x=wxData||{},h='<div class="ph"><b>'+escH(t('Weather'))+'</b></div>';
@@ -608,7 +612,7 @@ function setFocus(nr,nc,first){
   var a=e._a,nm=a?a.title:(e._o?barLabel(e._o):''),n=$('name');
   if(n.textContent!==nm)n.textContent=nm;
   if(first)glowNow(e);else glowSoon(e);
-  if(isHero()){heroSound();dockShift()}
+  if(isHero()){heroSound();dockShift();ltShift()}
   var sh=0;
   if(TH.push){   /* the grid sits under the dock: focusing it scrolls everything up (the dock stops at its 'up' position) and the grid fades in */
     document.body.classList.toggle('grid-open',r>=G);
@@ -832,7 +836,7 @@ function rebuild(){
   if(hero){
     dock=dock.filter(function(a){if(a&&a.input&&!heroApp){heroApp=a;return false}return true});
     for(var k=0;!heroApp&&k<inputs.length;k++)if(inputs[k].hdmiPlugIn)heroApp=inputApp(inputEntry(inputs[k].id),inputs,inputsLoaded)}
-  var he=$('hero'),lr=$('ltrow');he.textContent='';lr.textContent='';
+  var he=$('hero'),lr=$('ltrow');he.textContent='';lr.textContent='';lr.style.transform='';ltX=0;
   if(heroEl&&(!heroApp||tiles[heroApp.id]!==heroEl))heroStop();
   heroEl=null;
   if(hero&&heroApp){heroEl=tile(heroApp);heroDeco(heroEl,heroApp);he.appendChild(heroEl);hrow.push(heroEl)}
