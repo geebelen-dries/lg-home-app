@@ -584,7 +584,7 @@ function drawWx(){
     h+='</div>'}
   setHtml($('wx'),h)}
 function heroWake(){heroPlay();if(document.hidden&&isHero()&&heroEl&&!hv)api('/api/foreground').then(function(x){if(x&&x.appId==='com.webos.app.home')heroPlay(true)}).catch(function(){})}
-function ltLoad(){heroWake();if(!isHero()||document.body.getAttribute('data-lights')!=='show'||document.hidden)return;api('/api/scenes').then(ltSet).catch(function(){})}
+function ltLoad(){heroWake();if(!isHero()||document.body.getAttribute('data-lights')!=='show')return;api('/api/scenes').then(ltSet).catch(function(){})}
 /* Home Assistant scenes: one press turns a scene on; the last one used is marked while lights are on; All off ends them */
 function ltSet(x){
   if(!x||x.error)return;
