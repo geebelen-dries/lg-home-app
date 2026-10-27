@@ -697,21 +697,24 @@ function scenesMenu(){api('/api/scenes/all').then(function(x){
 
 /* ---------- opening a tile: it grows from where it is until it fills the screen, the rest fades, then the app opens. Transform
    and opacity only; the theme's effects.speed scales it (0: no zoom). Back on Home everything is put back without animating. ---------- */
-var zoomT=0;
+var zoomT=0,zoomBox=null;
 function zoomOpen(e,go){
   var spd=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spd'));if(isNaN(spd))spd=1;
   var w=e.offsetWidth,h=e.offsetHeight;
   if(!(spd>0)||!w||!h||document.body.classList.contains('zooming')){go();return}
   var r=e.getBoundingClientRect(),k=Math.max(1920/w,1080/h)*1.02;
   document.body.classList.add('zooming');e.classList.add('zoom');
-  /* only the tile's colour grows: its logo shrinks back as fast, so it stays the same size and sharp (a picture on a card fades) */
+  /* the tile's colour fills the screen while its logo grows only about twice its size, so it stays sharp (a card's picture fades);
+     the part of the page that holds the tile is lifted above the rest for the zoom */
+  var lg=Math.min(k,2.2);
   [].forEach.call(e.querySelectorAll('.in>*'),function(c){if(c.tagName==='VIDEO')return;
-    if(e.classList.contains('card'))c.style.opacity='0';else c.style.transform='scale('+(1/k).toFixed(4)+')'});
+    if(e.classList.contains('card'))c.style.opacity='0';else c.style.transform='scale('+(lg/k).toFixed(4)+')'});
+  zoomBox=e.parentNode;while(zoomBox&&zoomBox.parentNode!==document.body)zoomBox=zoomBox.parentNode;if(zoomBox)zoomBox.style.zIndex='20';
   e.style.transform='translate('+Math.round(960-(r.left+r.width/2))+'px,'+Math.round(540-(r.top+r.height/2))+'px) scale('+k.toFixed(3)+')';
   setTimeout(go,Math.round(340*spd));
   clearTimeout(zoomT);zoomT=setTimeout(zoomReset,8000)}   /* the app did not open: give Home back */
 function zoomReset(){
-  clearTimeout(zoomT);document.body.classList.remove('zooming');
+  clearTimeout(zoomT);document.body.classList.remove('zooming');if(zoomBox){zoomBox.style.zIndex='';zoomBox=null}
   [].forEach.call(document.querySelectorAll('.tile.zoom'),function(e){
     var kids=e.querySelectorAll('.in>*');
     e.style.transition='none';[].forEach.call(kids,function(c){c.style.transition='none';c.style.transform='';c.style.opacity=''});
