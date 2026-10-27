@@ -497,9 +497,15 @@ function tile(a){
   var i=new Image();i.alt='';i.decoding='async';d._i=i;
   if(!known)i.crossOrigin='anonymous';
   i.onload=function(){if(!colors[a.id]){var col=iconColor(i,a.id);d._col=col;paint(d,col);fit(d,wide(d));if(!col.t){colors[a.id]=col;storeSoon()}if(rows[r]&&rows[r][c]===d)glowNow(d)}};
-  i.onerror=function(){i.remove();var t=document.createElement('div');t.className='t';t.textContent=a.title;n.appendChild(t);
-    if(!colors[a.id]){var f=hsl2rgb(hashHue(a.id),.42,.42);paint(d,{c:f,b:hsl2rgb(hashHue(a.id),.4,.2)})}};   /* not remembered: a failed load must not pin a made-up colour */
-  i.src=a.id==='__live'?LIVE_ICON:API+'/icon/'+encodeURIComponent(a.id);n.appendChild(i);if(i.decode)i.decode().catch(function(){});
+  /* a failed icon shows the name; it is asked for again a few times, because the service may just be starting (after an update) */
+  var tries=0,src=a.id==='__live'?LIVE_ICON:API+'/icon/'+encodeURIComponent(a.id);
+  i.onerror=function(){
+    if(i.parentNode)i.remove();
+    if(!d._t){var t=document.createElement('div');t.className='t';t.textContent=a.title;n.appendChild(t);d._t=t}
+    if(!colors[a.id]){var f=hsl2rgb(hashHue(a.id),.42,.42);paint(d,{c:f,b:hsl2rgb(hashHue(a.id),.4,.2)})}   /* not remembered: a failed load must not pin a made-up colour */
+    if(tries++<6)setTimeout(function(){i.src=src+(src.indexOf('?')<0?'?':'&')+'r='+tries},Math.min(30000,3000*tries))};
+  var ok0=i.onload;i.onload=function(){if(d._t){d._t.remove();d._t=null}if(!i.parentNode)n.appendChild(i);ok0.call(i)};
+  i.src=src;n.appendChild(i);if(i.decode)i.decode().catch(function(){});
   return d}
 
 /* ---------- ambient glow: two layers cross-fade, updated only once focus settles ---------- */
