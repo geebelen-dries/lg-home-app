@@ -357,7 +357,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   // the place comes from the phone page or Home Assistant, the token never reaches the page, only scenes can be turned on
   const homeMod = require(path.join(helper, 'home'));
   ok(homeMod.summary([{ t: '20:00', mm: 0 }, { t: '21:00', mm: 0 }, { t: '22:00', mm: 0.4 }]) === 'Rain from 22:00' && homeMod.summary([{ t: '20:00', mm: 1 }, { t: '21:00', mm: 0 }]) === 'Raining, dry by 21:00' && homeMod.summary([{ t: '20:00', mm: 0 }, { t: '21:00', mm: 0.05 }]) === 'Dry for the next 2 hours', 'the forecast line says when rain starts or stops');
-  const hmHits = [];
+  const hmHits = []; let hmSource = '[LG] webOS TV OLED';
   const hmSrv = http.createServer((q, rq) => {
     let b = ''; q.on('data', c => { b += c; }); q.on('end', () => {
       hmHits.push(q.method + ' ' + q.url + ' ' + (q.headers.authorization || '') + ' ' + b);
@@ -365,8 +365,9 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
       if (/^\/v1\/search/.test(q.url)) return send(/name=Nowhere/.test(q.url) ? { results: [] } : { results: [{ name: 'Ghent', latitude: 51.05, longitude: 3.72 }] });
       if (/^\/v1\/forecast/.test(q.url)) return send({ current: { time: '2026-10-25T20:15', temperature_2m: 12.4, weather_code: 3 }, hourly: { time: ['2026-10-25T19:00', '2026-10-25T20:00', '2026-10-25T21:00', '2026-10-25T22:00'], temperature_2m: [13, 12.4, 11.6, 11], precipitation: [0, 0, 0, 0.8], precipitation_probability: [0, 5, 20, 80], weather_code: [3, 3, 0, 61], is_day: [1, 1, 0, 0] } });
       if (q.url === '/api/config') return q.headers.authorization === 'Bearer HATOK' ? send({ latitude: 50.85, longitude: 4.35, location_name: 'Home' }) : send({}, 401);
-      if (q.url === '/api/states') return send([{ entity_id: 'light.kitchen', state: 'off', attributes: { friendly_name: 'Kitchen' } }, { entity_id: 'light.living', state: 'on', attributes: { friendly_name: 'Living room' } }, { entity_id: 'scene.movie', state: '2026-10-25T19:00:00+00:00', attributes: { friendly_name: 'Movie' } }, { entity_id: 'scene.evening', state: '2026-10-25T18:00:00+00:00', attributes: { friendly_name: 'Evening' } }, { entity_id: 'scene.old_one', state: 'unavailable', attributes: {} }, { entity_id: 'switch.boiler', state: 'on', attributes: {} }]);
-      if (/^\/api\/services\/(light|scene)\//.test(q.url)) return send([]);
+      if (q.url === '/api/states') return send([{ entity_id: 'light.kitchen', state: 'off', attributes: { friendly_name: 'Kitchen' } }, { entity_id: 'light.living', state: 'on', attributes: { friendly_name: 'Living room' } }, { entity_id: 'scene.movie', state: '2026-10-25T19:00:00+00:00', attributes: { friendly_name: 'Movie' } }, { entity_id: 'scene.evening', state: '2026-10-25T18:00:00+00:00', attributes: { friendly_name: 'Evening' } }, { entity_id: 'scene.old_one', state: 'unavailable', attributes: {} }, { entity_id: 'switch.boiler', state: 'on', attributes: {} }, { entity_id: 'media_player.spotify_me', state: 'playing', attributes: { source: hmSource, media_title: 'Song', media_artist: 'Band', media_album_name: 'Album', media_duration: 200, media_position: 50, media_position_updated_at: new Date().toISOString(), entity_picture: '/api/media_player_proxy/media_player.spotify_me?token=PICTOK' } }]);
+      if (/^\/api\/media_player_proxy\//.test(q.url)) { rq.writeHead(200, { 'content-type': 'image/jpeg' }); return rq.end(Buffer.from([0xff, 0xd8, 0xff])); }
+      if (/^\/api\/services\/(light|scene|media_player)\//.test(q.url)) return send([]);
       send({}, 404);
     });
   }).listen(0, '127.0.0.1');
@@ -390,6 +391,13 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   hmR = await hmCall('/api/scenes/all'); ok(hmR.j.items.length === 3 && hmR.j.picked.length === 0, 'every scene is listed for choosing');
   hmR = await hmCall('/api/scenes/pick', 'POST', { ids: ['scene.movie', 'switch.boiler', 'scene.evening'] });
   ok(hmR.code === 200 && JSON.stringify(hmConf.home.scenes) === '["scene.movie","scene.evening"]' && hmR.j.items.map(x => x.name).join() === 'Movie,Evening', 'the chosen scenes are kept in config.json and shown in that order; other entities are dropped');
+  // music: Spotify through Home Assistant, shown only while it plays on this TV; the token and the picture address stay in the service
+  hmR = await hmCall('/api/music');
+  ok(hmR.j.show === true && hmR.j.playing && hmR.j.title === 'Song' && hmR.j.artist === 'Band' && hmR.j.position >= 50 && hmR.j.duration === 200 && /^[0-9a-f]{12}$/.test(hmR.j.art) && hmR.out.indexOf('HATOK') < 0 && hmR.out.indexOf('PICTOK') < 0, 'Spotify playing on this TV is shown, without the token or the picture address');
+  { const x = fake('/api/music/art'); await hm.handle(x.req, x.res, '/api/music/art', async () => ({})); ok(x.res.code === 200 && hmHits.some(h => /^GET \/api\/media_player_proxy\/.* Bearer HATOK/.test(h)), 'the cover comes through the service'); }
+  hmR = await hmCall('/api/music/control', 'POST', { action: 'next' }); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/media_player\/media_next_track Bearer HATOK \{"entity_id":"media_player.spotify_me"\}/.test(h)), 'next goes to the Spotify player in Home Assistant');
+  hmR = await hmCall('/api/music/control', 'POST', { action: 'turn_off' }); ok(hmR.code === 400, 'only previous, play/pause and next are allowed');
+  hmSource = 'Phone'; await new Promise(r => setTimeout(r, 2100)); hmR = await hmCall('/api/music'); ok(hmR.j.show === false, 'Spotify playing on another device is not shown');
   hmR = await hmCall('/api/lights/off', 'POST'); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/light\/turn_off Bearer HATOK \{"entity_id":"all"\}/.test(h)), 'All off switches every light off');
   hmSrv.close(); delete process.env.CYTV_METEO_URL; delete process.env.CYTV_GEO_URL;
   const heroTh = themeMod.normalize({ home: { layout: 'hero' }, hero: { w: 1040, y: 136 }, dock: { anchor: 'bottom' } }, 'herotest');

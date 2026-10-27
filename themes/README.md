@@ -60,7 +60,8 @@ Folder: [`lift/`](lift/)
 
 Your TV input large and live, like LG's own Home did: the first input in the dock (Customise > Dock > An input...) fills the big
 picture and plays its sound while it has the focus; OK shows it full screen. Beside it, the rain forecast for the coming hours and
-your Home Assistant scenes (OK turns one on, All off switches every light off). Below, the other dock apps and Plex On Deck share one row;
+your Home Assistant scenes (OK turns one on, All off switches every light off), and while Spotify plays on the TV a Now playing
+panel with previous, play/pause and next (Home Assistant's Spotify integration). Below, the other dock apps and Plex On Deck share one row;
 Down again shows every app. Extends Lift.
 
 [![Hero](hero/preview.jpg)](hero/preview.jpg)

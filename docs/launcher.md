@@ -81,6 +81,11 @@ Themes with `home.layout` set to `hero` (Hero) show the first input in the dock 
   access token from the same phone setup page; the token stays in the service and the page only gets names and states. Only
   `scene.*` entities can be turned on. **Customise → Scenes** lists every scene: OK shows or hides one (at most seven, in the order
   you pick them; kept in `config.json` under `home.scenes`). With none picked, the first seven by name show.
+- **Now playing.** While Spotify plays on the TV, a panel takes the weather's place: the cover, title, artist, a progress bar
+  and previous, play/pause and next (OK). It reads Home Assistant's [Spotify integration](https://www.home-assistant.io/integrations/spotify/)
+  (a `media_player.spotify_*` entity) over the same connection as the scenes, so the TV stores no Spotify sign-in. It only
+  shows when the player's source is the TV itself (a Spotify Connect name with `[LG]` or `webOS` in it); set `home.spotifySource`
+  to the exact name if yours differs, and `home.spotify` to the entity id if Home Assistant has more than one Spotify player.
 - **Opening.** OK on a tile makes it grow until it fills the screen, then the app or input opens (the theme's
   `effects.speed` sets how fast; 0 opens it at once).
 - **Apps and Continue watching.** The other apps of the dock and the Plex On Deck cards share the row under the big tile; it scrolls
@@ -123,7 +128,7 @@ Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:
 | `sort` | `usage` or `alpha`. |
 | `clock` | `auto`, `12` or `24`. |
 | `weather` | `place`: the town for the rain forecast (set on the phone setup page); the service adds where it found it. |
-| `home` | `scenes`: the Home Assistant scene entity ids the Hero panel shows, in order (empty: the first seven by name). |
+| `home` | `spotify`, `spotifySource`: the Spotify player entity and the source name that means "this TV" (both optional). `scenes`: the Home Assistant scene entity ids the Hero panel shows, in order (empty: the first seven by name). |
 
 See [`config.example.json`](https://github.com/lasharor/cleanyourtv-WebOS/blob/main/config.example.json). Change settings in
 the launcher; the file is read and written by the service.
