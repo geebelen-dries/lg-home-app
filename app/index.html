@@ -187,7 +187,8 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 [data-layout=hero] #dock .tile.first{margin-left:32px}
 .zooming #view{overflow:visible}   /* the scroll area's clip line would cut the growing tile */
 .tile.zoom{z-index:60;transition:transform calc(.34s*var(--spd)) cubic-bezier(.4,0,.2,1)!important}
-.tile.zoom .cap,.tile.zoom::before{opacity:0!important}
+.tile.zoom .cap,.tile.zoom::before,.tile.zoom .hx,.tile.zoom .pb{opacity:0!important;transition:opacity calc(.15s*var(--spd)) linear}
+.tile.zoom .in>*{transition:transform calc(.34s*var(--spd)) cubic-bezier(.4,0,.2,1),opacity calc(.2s*var(--spd)) linear}
 .zooming #top,.zooming #panel,.zooming #credit,.zooming #shelf,.zooming #deck .dh,.zooming #dock .dhh,.zooming .tile:not(.zoom){opacity:0!important;transition:opacity calc(.2s*var(--spd)) linear!important}
 [data-layout=hero] #dock .dhh{display:block;position:absolute;top:-56px;font-size:calc(28px*var(--fs));font-weight:600;white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.55)}   /* the label under the tile already names the input */
 
@@ -699,12 +700,19 @@ function zoomOpen(e,go){
   if(!(spd>0)||!w||!h||document.body.classList.contains('zooming')){go();return}
   var r=e.getBoundingClientRect(),k=Math.max(1920/w,1080/h)*1.02;
   document.body.classList.add('zooming');e.classList.add('zoom');
+  /* only the tile's colour grows: its logo shrinks back as fast, so it stays the same size and sharp (a picture on a card fades) */
+  [].forEach.call(e.querySelectorAll('.in>*'),function(c){if(c.tagName==='VIDEO')return;
+    if(e.classList.contains('card'))c.style.opacity='0';else c.style.transform='scale('+(1/k).toFixed(4)+')'});
   e.style.transform='translate('+Math.round(960-(r.left+r.width/2))+'px,'+Math.round(540-(r.top+r.height/2))+'px) scale('+k.toFixed(3)+')';
   setTimeout(go,Math.round(340*spd));
   clearTimeout(zoomT);zoomT=setTimeout(zoomReset,8000)}   /* the app did not open: give Home back */
 function zoomReset(){
   clearTimeout(zoomT);document.body.classList.remove('zooming');
-  [].forEach.call(document.querySelectorAll('.tile.zoom'),function(e){e.style.transition='none';e.classList.remove('zoom');e.style.transform='';void e.offsetWidth;e.style.transition=''})}
+  [].forEach.call(document.querySelectorAll('.tile.zoom'),function(e){
+    var kids=e.querySelectorAll('.in>*');
+    e.style.transition='none';[].forEach.call(kids,function(c){c.style.transition='none';c.style.transform='';c.style.opacity=''});
+    e.classList.remove('zoom');e.style.transform='';void e.offsetWidth;
+    e.style.transition='';[].forEach.call(kids,function(c){c.style.transition=''})})}
 
 /* ---------- menus ---------- */
 var stack=[], ovEl=null;
