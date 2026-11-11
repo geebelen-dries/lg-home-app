@@ -86,8 +86,9 @@ Themes with `home.layout` set to `hero` (Hero) show the first input in the dock 
   (a `media_player.spotify_*` entity) over the same connection as the scenes, so the TV stores no Spotify sign-in. It only
   shows when the player's source is the TV itself (a Spotify Connect name with `[LG]` or `webOS` in it); set `home.spotifySource`
   to the exact name if yours differs, and `home.spotify` to the entity id if Home Assistant has more than one Spotify player.
-- **Opening.** OK on a tile makes it grow until it fills the screen, then the app or input opens (the theme's
-  `effects.speed` sets how fast; 0 opens it at once).
+- **Opening.** OK on a tile makes its colour grow until it fills the screen and darken to black, then the app opens on its own
+  dark start screen; the tile's logo fades at once, so only the app's own logo shows (the theme's `effects.speed` sets how fast;
+  0 opens it at once). The live TV tile is not zoomed: the input opens and the TV enlarges the picture itself.
 - **Apps and Continue watching.** The other apps of the dock and the Plex On Deck cards share the row under the big tile; it scrolls
   sideways when the cards do not fit.
 
