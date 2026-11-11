@@ -73,6 +73,7 @@ function create(ctx) {
     return all.length ? all : ((st.list && st.list.titles) || []);
   }
   // one picture, downloaded: {file, title, credit}
+  let lastTs = 0;
   async function fetchOne() {
     const list = await titles();
     if (!list.length) throw new Error('no pictures listed');
@@ -87,7 +88,8 @@ function create(ctx) {
       const b = await fetchBuf(info.thumburl, MAX_IMAGE, 60000), k = kind(b);
       if (!k) continue;
       nc.mkdirp(D);
-      const file = 'bd-' + Date.now() + '.' + k;
+      const ts = Math.max(Date.now(), lastTs + 1); lastTs = ts;   // two pictures never share a name, even within one millisecond
+      const file = 'bd-' + ts + '.' + k;
       fs.writeFileSync(path.join(D, file + '.tmp'), b); fs.renameSync(path.join(D, file + '.tmp'), path.join(D, file));
       return { file, title, credit: cr };
     }
