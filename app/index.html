@@ -145,8 +145,6 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 #hero video{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity calc(.4s*var(--spd)) linear}
 #hero .tile.live video{opacity:1}
 #hero .tile .hx{display:block;position:absolute;left:0;top:0;right:0;bottom:0;border-radius:inherit;pointer-events:none}
-#hero .hl{position:absolute;left:24px;top:24px;padding:6px 14px;border-radius:10px;background:#e5484d;color:#fff;font-size:20px;font-weight:600;opacity:0}
-#hero .live .hl{opacity:1}
 #hero .hb{position:absolute;left:0;right:0;bottom:0;padding:80px 32px 26px;border-radius:0 0 22px 22px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.72));color:#fff}
 #hero .hn{font-size:calc(40px*var(--fs));font-weight:600}
 [data-layout=hero].grid-open #hero,[data-layout=hero].grid-open #panel{opacity:0;pointer-events:none}
@@ -592,7 +590,7 @@ function heroPlay(force){
 function heroLog(m){try{var x=new XMLHttpRequest();x.open('GET',API+'/api/log?m='+encodeURIComponent('hero: '+m));x.send()}catch(e){}}   /* into the service log (/tmp/cleanyourtv-helper.log) */
 function heroSound(){if(hv)hv.muted=!(rows[r]&&rows[r][c]===heroEl)}
 function heroDeco(d,a){
-  if(!d._hx){var x=document.createElement('div');x.className='hx';x.innerHTML='<span class="hl">LIVE</span><div class="hb"><div class="hn"></div></div>';d.appendChild(x);d._hx=x}
+  if(!d._hx){var x=document.createElement('div');x.className='hx';x.innerHTML='<div class="hb"><div class="hn"></div></div>';d.appendChild(x);d._hx=x}
   d._hx.querySelector('.hn').textContent=a.title}
 function dockShift(){
   if(r!==DK)return;var e=rows[r][c],x=e.offsetLeft,w=e.offsetWidth,W=1728;
