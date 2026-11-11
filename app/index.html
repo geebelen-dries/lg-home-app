@@ -470,7 +470,7 @@ function paint(d,col){d.style.setProperty('--c',col.c.join(','));d.style.setProp
 function tile(a){
   if(tiles[a.id]){   /* an input tile may have been built before its device arrived (placeholder name, no app id): refresh it */
     var done=tiles[a.id];
-    if(a.deck){done._a=a;done._cap.textContent=deckCap(a.deck);done._pb.style.width=Math.round(a.deck.progress*100)+'%';return done}
+    if(a.deck){done._a=a;done._cap.textContent=deckCap(a.deck);deckBar(done,a.deck.progress);return done}
     if(a.input&&done._a&&(done._a.title!==a.title||done._a.dev!==a.dev)){done._a=a;if(done._slab)done._slab.textContent=a.title;done._cap.textContent=a.title}
     return done}
   /* .in holds the picture (and clips it), .cap is the small name under the tile that some themes show on focus */
@@ -482,7 +482,7 @@ function tile(a){
   if(a.deck){   /* a Plex On Deck card: the picture through the service, the progress, the title under it */
     cap.textContent=deckCap(a.deck);d.className+=' card';
     if(a.deck.img){var di=new Image();di.alt='';di.decoding='async';di.src=API+'/api/plex/img?p='+encodeURIComponent(a.deck.img);n.appendChild(di)}
-    var pb=document.createElement('div');pb.className='pb';pb.innerHTML='<i></i>';d.appendChild(pb);d._pb=pb.firstChild;d._pb.style.width=Math.round(a.deck.progress*100)+'%';return d}
+    var pb=document.createElement('div');pb.className='pb';pb.innerHTML='<i></i>';d.appendChild(pb);d._pb=pb.firstChild;deckBar(d,a.deck.progress);return d}
   var ic=a.input&&(cfg.inputIcons||{})[inputIdOf(a.id)];
   if(ic&&ic.file){   /* an input with its own picture (config.json inputIcons), on its own colour */
     d.className+=' ext pic';var bg=/^#[0-9a-f]{6}$/i.test(ic.bg||'')?ic.bg:'#ffffff',bgc=[1,3,5].map(function(i){return parseInt(bg.slice(i,i+2),16)});
@@ -529,6 +529,8 @@ function applyTheme(t){
   TH={cols:t.cols||10,tileH:t.tileH||151,gapY:t.gapY||26,gt:t.gt||350,viewH:t.viewH||780,dockN:t.dockN||4,overlay:!!t.overlay,push:t.push||null,overlayH:t.overlayH||510,glow:t.glowRgb||'',gicon:t.attrs&&t.attrs.gicon||'fill',glowTop:!!(t.attrs&&t.attrs.glow==='top'),iconH:t.iconH||56,heroLive:!!t.heroLive}}
 
 /* ---------- Plex On Deck: the service signs in and reads the user's server (helper/plex.js); the page only gets titles, progress and pictures ---------- */
+/* the progress bar of an On Deck card; none for an episode not started yet (Plex lists the next episode with progress 0) */
+function deckBar(d,p){var pc=Math.round((p||0)*100);d._pb.style.width=pc+'%';d._pb.parentNode.style.display=pc>0?'':'none'}
 function deckCap(it){return it.sub?it.title+' \u00B7 '+it.sub:it.title}
 /* OK on a card: Plex on the TV ignores launch links (and restarts on one), so Plex is opened as it is and the service starts the
    item on it once it is online, after the profile picker (helper/plex.js, the way Plex's cast button does it) */

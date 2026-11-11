@@ -58,7 +58,7 @@ To show a logo instead of the HDMI glyph (the logo of a set-top box, say), put a
 ## Plex On Deck
 
 Themes that show it (Lift) put a row of **On Deck** cards above the dock: what you are in the middle of on your own Plex server,
-with a progress bar. **Customise → Plex** signs in: it shows a short code, which you enter at **plex.tv/link** on a phone or
+with a progress bar (none on the next episode of a series that you have not started). **Customise → Plex** signs in: it shows a short code, which you enter at **plex.tv/link** on a phone or
 computer; no password is typed on the TV. The TV keeps the token in `config.json` and never passes it to the page; the cards
 and their pictures come from your server on the local network. OK on a card opens Plex and
 starts that episode or film where you left off: Plex on the TV does not follow launch links, so the TV's service asks your server
