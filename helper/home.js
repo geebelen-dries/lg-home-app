@@ -46,7 +46,7 @@ const WET = 0.1;   // mm in an hour that counts as rain
 function summary(hours) {
   if (!hours.length) return '';
   const wet = h => h.mm >= WET;
-  if (wet(hours[0])) { for (let i = 1; i < hours.length; i++) if (!wet(hours[i])) return 'Raining, dry by ' + hours[i].t; return 'Raining for the next ' + hours.length + ' hours'; }
+  if (wet(hours[0])) { for (let i = 1; i < hours.length; i++) if (!wet(hours[i])) return 'Raining, dry by ' + hours[i].t; return 'Rain for the next ' + hours.length + ' hours'; }
   for (let i = 1; i < hours.length; i++) if (wet(hours[i])) return 'Rain from ' + hours[i].t;
   return 'Dry for the next ' + hours.length + ' hours';
 }

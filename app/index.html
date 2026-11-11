@@ -172,8 +172,8 @@ body{background-image:var(--wall);background-size:1920px 1080px}
 [data-weather=hide] #wx,[data-lights=hide] #lt{display:none}
 [data-weather=hide] #lt,[data-lights=hide] #wx{height:100%;margin:0}
 .pn .ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px}
-.pn .ph b{font-size:calc(28px*var(--fs));font-weight:600}
-.pn .ph span{font-size:calc(20px*var(--fs));color:var(--ink2)}
+.pn .ph b{font-size:calc(28px*var(--fs));font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pn .ph span{flex:none;margin-left:16px;font-size:calc(20px*var(--fs));color:var(--ink2)}
 .pn .pm{font-size:calc(22px*var(--fs));color:var(--ink2);line-height:1.35}
 #wx .hrs{display:flex}
 #wx .hr{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:160px;margin-right:10px;padding:12px 0;box-sizing:border-box;border-radius:14px;background:rgba(255,255,255,.05);font-size:calc(19px*var(--fs))}
