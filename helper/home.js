@@ -2,17 +2,19 @@
 // Weather comes from Open-Meteo (free, no account). The place is the one typed on the phone setup page (manager > Voice > Set up
 // from your phone), looked up with Open-Meteo's place search, or else the location of the user's Home Assistant.
 // Scenes use the Home Assistant address and long-lived token that voice uses (config.json voice.ha); the token stays here. One
-// press turns a scene on; All off switches every light off.
+// press turns a scene on.
 // Which scenes show is chosen on the TV (Customise > Scenes) and kept in config.json home.scenes.
+// The room toggle acts on one Home Assistant area only: home.area, else the area of the TV's own media player in Home Assistant.
+// With a light on there it switches the area off; with all off it turns on home.areaScene, else the area's lights.
 // API (loopback only): GET /api/weather, GET /api/scenes, GET /api/scenes/all, POST /api/scenes/activate {id},
-// POST /api/scenes/pick {ids}, POST /api/lights/off.
+// POST /api/scenes/pick {ids}, POST /api/area/toggle.
 const https = require('https'), http = require('http');
 const nc = require('./netcompat'), { URL } = nc;
 
 const METEO = () => process.env.CYTV_METEO_URL || 'https://api.open-meteo.com';
 const GEO = () => process.env.CYTV_GEO_URL || 'https://geocoding-api.open-meteo.com';
 const MAX_JSON = 2 * 1024 * 1024, WEATHER_MS = 15 * 60000, SCENES_MS = 4000, MAX_SCENES = 7, HOURS = 12;
-const SCENE = /^scene\.[a-z0-9_]{1,80}$/;
+const SCENE = /^scene\.[a-z0-9_]{1,80}$/, AREA = /^[a-z0-9_]{1,60}$/, AREA_MS = 3600000;
 
 function request(method, url, hdrs, payload, ms, tls) {
   return new Promise((resolve, reject) => {
@@ -100,6 +102,32 @@ function create(ctx) {
     return wxP;
   }
 
+  // ---- the room of the TV ----
+  // its id, name and lights, read through Home Assistant's template API (its REST API has no areas), kept for an hour
+  let ar = { at: 0, key: '', data: null };
+  const tpl = (h, t) => request('POST', h.url + '/api/template', { authorization: 'Bearer ' + h.token }, { template: t }, 10000, tlsFor(h)).then(r => {
+    if (r.status === 401 || r.status === 403) throw new Error('Home Assistant refused the access token');
+    if (r.status < 200 || r.status >= 300) throw new Error('Home Assistant answered ' + r.status);
+    return JSON.parse(r.text);
+  });
+  async function area(h) {
+    const want = (ctx.readConf().home || {}).area, key = h.url + '|' + (want || '');
+    if (ar.data !== undefined && ar.key === key && Date.now() - ar.at < AREA_MS) return ar.data;
+    let id = typeof want === 'string' && AREA.test(want) ? want : '';
+    if (!id) {   // the area of the TV's media player (an LG / webOS one that has an area)
+      const mps = await tpl(h, '{% set ns = namespace(o=[]) %}{% for s in states.media_player %}{% set ns.o = ns.o + [[s.entity_id, area_id(s.entity_id) or "", s.name]] %}{% endfor %}{{ ns.o | tojson }}');
+      const tv = (Array.isArray(mps) ? mps : []).find(m => Array.isArray(m) && m[1] && /lg|webos/i.test(m[0] + ' ' + m[2]));
+      id = tv && AREA.test(tv[1]) ? tv[1] : '';
+    }
+    let data = null;
+    if (id) {
+      const a = await tpl(h, '{{ {"name": area_name("' + id + '") or "", "lights": area_entities("' + id + '") | select("match", "light\\.") | list} | tojson }}');
+      if (a && a.name) data = { id, name: String(a.name).slice(0, 40), lights: (Array.isArray(a.lights) ? a.lights : []).filter(x => /^light\.[a-z0-9_]{1,80}$/.test(x)) };
+    }
+    ar = { at: Date.now(), key, data };
+    return data;
+  }
+
   // ---- scenes ----
   // the scenes to show (config home.scenes, else all by name), which one was turned on last, and how many lights are on
   let sc = { at: 0, data: null };
@@ -111,13 +139,14 @@ function create(ctx) {
     const all = states.filter(s => s && SCENE.test(s.entity_id));
     let list = Array.isArray(pick) && pick.length ? pick.map(id => all.find(s => s.entity_id === id)).filter(Boolean) : all.slice().sort((a, b) => name(a).localeCompare(name(b)));
     list = list.slice(0, MAX_SCENES);
-    const lightsOn = states.filter(s => s && /^light\./.test(s.entity_id) && s.state === 'on').length;
+    const on = s => s && /^light\./.test(s.entity_id) && s.state === 'on', anyOn = states.some(on);
+    const rm = await area(h).catch(() => null), lightsOn = rm ? states.filter(s => on(s) && rm.lights.indexOf(s.entity_id) >= 0).length : states.filter(on).length;
     // a scene's state is when it was last turned on; it counts as the current one only while some light is on
     let last = null; for (const s of list) { const t = Date.parse(s.state); if (isFinite(t) && (!last || t > last.t)) last = { id: s.entity_id, t }; }
     // scenes named after one room ("Bedroom Relax", "Bedroom Read"): the room goes in the heading, the tiles keep the rest
     const names = list.map(name), first = names.length > 1 ? names[0].split(' ')[0] : '';
     const room = first && names.every(n => n.split(' ')[0] === first && n.length > first.length + 1) ? first : '';
-    const data = { items: list.map((s, i) => ({ id: s.entity_id, name: room ? names[i].slice(room.length + 1).replace(/^./, ch => ch.toUpperCase()) : names[i], active: !!(lightsOn && last && last.id === s.entity_id), off: s.state === 'unavailable' })), lightsOn, room };
+    const data = { items: list.map((s, i) => ({ id: s.entity_id, name: room ? names[i].slice(room.length + 1).replace(/^./, ch => ch.toUpperCase()) : names[i], active: !!(anyOn && last && last.id === s.entity_id), off: s.state === 'unavailable' })), lightsOn, room, area: rm ? { id: rm.id, name: rm.name, on: lightsOn > 0 } : null };
     sc = { at: Date.now(), data };
     return data;
   }
@@ -145,8 +174,15 @@ function create(ctx) {
       } else if (u === '/api/scenes/activate') {
         if (!SCENE.test(String(b.id || ''))) return out({ error: 'not a scene' }, 400);
         await ha(h, 'POST', '/api/services/scene/turn_on', { entity_id: b.id });
-      } else if (u === '/api/lights/off') {
-        await ha(h, 'POST', '/api/services/light/turn_off', { entity_id: 'all' });
+      } else if (u === '/api/area/toggle') {   // the TV's room: off when a light there is on, else its scene (or its lights) on
+        const rm = await area(h);
+        if (!rm) return out({ error: 'the room of the TV is not known: set home.area' }, 400);
+        const states = await ha(h, 'GET', '/api/states'), anyOn = states.some(s => s && s.state === 'on' && rm.lights.indexOf(s.entity_id) >= 0);
+        const scene = (ctx.readConf().home || {}).areaScene;
+        if (anyOn) await ha(h, 'POST', '/api/services/light/turn_off', { area_id: rm.id });
+        else if (typeof scene === 'string' && SCENE.test(scene)) await ha(h, 'POST', '/api/services/scene/turn_on', { entity_id: scene });
+        else await ha(h, 'POST', '/api/services/light/turn_on', { area_id: rm.id });
+        await new Promise(r => setTimeout(r, 700));   // Home Assistant updates the lights' states a moment later
       } else { res.writeHead(404); return res.end(); }
       return out(await scenes(true));
     } catch (e) { return out({ error: e.message }, 502); }

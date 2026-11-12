@@ -22,5 +22,10 @@
       "app": "com.palm.app.settings"
     }
   ],
-  "hidden": []
+  "hidden": [],
+  "home": {
+    "area": "",
+    "areaScene": "",
+    "scenes": []
+  }
 }

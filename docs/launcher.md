@@ -76,8 +76,12 @@ Themes with `home.layout` set to `hero` (Hero) show the first input in the dock 
 - **Rain.** The forecast for the next six hours from [Open-Meteo](https://open-meteo.com) (free, no account): temperature, rain in mm
   or the chance of rain, and a line that says when rain starts or stops. The place is the one typed under *Place for the weather*
   on the phone setup page (manager app > Voice > Set up from your phone), or else the location set in your Home Assistant.
-- **Scenes.** Up to seven scenes from Home Assistant, with **All off** (every light off). OK turns a scene on; the scene used
-  last is marked while lights are on, and the heading counts the lights that are on. It uses the Home Assistant address and
+- **Scenes.** Up to seven scenes from Home Assistant, and a toggle for the TV's own room. OK turns a scene on; the scene used
+  last is marked while lights are on. The last button acts on one Home Assistant area only, never on other rooms: by default the
+  area of the TV's own media player in Home Assistant (for example *Living Room*), or the area id in `home.area`. While a light
+  in that area is on it reads "*Living Room* off" and switches the area's lights off; with them all off it reads "*Living Room*
+  on" and turns on the scene in `home.areaScene` (a `scene.*` entity id), or else the area's lights. The heading counts the
+  lights that are on in that area. It uses the Home Assistant address and
   access token from the same phone setup page; the token stays in the service and the page only gets names and states. Only
   `scene.*` entities can be turned on. **Customise → Scenes** lists every scene: OK shows or hides one (at most seven, in the order
   you pick them; kept in `config.json` under `home.scenes`). With none picked, the first seven by name show.
@@ -124,7 +128,7 @@ Settings are stored on the TV in `/media/developer/cleanyourtv/config.json`:
 | `sort` | `usage` or `alpha`. |
 | `clock` | `auto`, `12` or `24`. |
 | `weather` | `place`: the town for the rain forecast (set on the phone setup page); the service adds where it found it. |
-| `home` | `scenes`: the Home Assistant scene entity ids the Hero panel shows, in order (empty: the first seven by name). |
+| `home` | `scenes`: the Home Assistant scene entity ids the Hero panel shows, in order (empty: the first seven by name). `area`: the area id of the room toggle (empty: the area of the TV's media player). `areaScene`: the scene the toggle turns on (empty: the area's lights). |
 
 See [`config.example.json`](https://github.com/lasharor/cleanyourtv-WebOS/blob/main/config.example.json). Change settings in
 the launcher; the file is read and written by the service.

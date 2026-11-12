@@ -366,7 +366,7 @@ function clockOpts(){var c=cfg.clock,o={hour:'numeric',minute:'2-digit'};if(c===
 var apps=[], cfg={}, usage={}, warned=false, rows=[], r=1, c=0, colors={}, tiles={}, lastSig='', gSide=0, gColor='', gT=0, saveT=0;
 var inputs=[], inputsLoaded=false, inputsSig='';
 var DK=1, G=2, deckItems=[], deckSig='', PLEX_APP='cdp-30';
-var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, ltOn=0, ltRoom='', ltX=0, dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the scenes */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
+var heroTry=0, heroEl=null, hv=null, wxData=null, ltItems=[], ltSig='', ltOff=false, ltOn=0, ltRoom='', ltArea=null, ltX=0, dkShift=0;   /* hero layout: the big tile, its live video, the forecast, the scenes */   /* DK: the dock's row, G: the first grid row (one lower with an On Deck row) */
 function $(id){return document.getElementById(id)}
 var toastT;
 function toast(t){var e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){e.classList.remove('on')},4000)}
@@ -593,25 +593,28 @@ function drawWx(){
   setHtml($('wx'),h)}
 function heroWake(){heroPlay();if(document.hidden&&isHero()&&heroEl&&!hv)api('/api/foreground').then(function(x){if(x&&x.appId==='com.webos.app.home')heroPlay(true)}).catch(function(){})}
 function ltLoad(){heroWake();if(!isHero()||document.body.getAttribute('data-lights')!=='show')return;api('/api/scenes').then(ltSet).catch(function(){})}
-/* Home Assistant scenes: one press turns a scene on; the last one used is marked while lights are on; All off ends them */
+/* Home Assistant scenes: one press turns a scene on; the last one used is marked while lights are on. The last button is the TV's
+   room (helper/home.js): "<room> off" while a light there is on, else "<room> on"; it never touches other rooms. */
 function ltSet(x){
   if(!x||x.error)return;
-  var items=x.items||[],sig=JSON.stringify(items.map(function(i){return i.id}))+(x.off?'off':'');ltOff=!!x.off;ltItems=items;ltOn=x.lightsOn||0;ltRoom=x.room||'';
+  var items=x.items||[],sig=JSON.stringify(items.map(function(i){return i.id}))+(x.off?'off':'')+(x.area?x.area.id:'');ltOff=!!x.off;ltItems=items;ltOn=x.lightsOn||0;ltRoom=x.room||'';ltArea=x.area||null;
   if(sig!==ltSig){ltSig=sig;rebuild();return}
   ltPaintAll()}
-function ltTile(l){var d=document.createElement('div');d.className='tile lt';d._l=l;d.innerHTML='<div class="in">'+svg(l.all?'power':'scene')+'<span class="ln"></span></div>';hit(d);ltPaint(d);return d}
+function ltTile(l){var d=document.createElement('div');d.className='tile lt';d._l=l;d.innerHTML='<div class="in">'+svg(l.room?'power':'scene')+'<span class="ln"></span></div>';hit(d);ltPaint(d);return d}
 function ltPaint(d){
-  var l=d._l;if(!l.all)for(var i=0;i<ltItems.length;i++)if(ltItems[i].id===l.id){l=d._l=ltItems[i];break}
+  var l=d._l;if(l.room){d.classList.toggle('on',!!(ltArea&&ltArea.on));d.querySelector('.ln').textContent=ltArea?ltArea.name+' '+(ltArea.on?t('off'):t('on')):'';return}
+  for(var i=0;i<ltItems.length;i++)if(ltItems[i].id===l.id){l=d._l=ltItems[i];break}
   d.classList.toggle('on',!!l.active);d.classList.toggle('na',!!l.off);
-  d.querySelector('.ln').textContent=l.all?t('All off'):l.name}
+  d.querySelector('.ln').textContent=l.name}
 function ltPaintAll(){
   [].forEach.call($('ltrow').children,function(d){if(d._l)ltPaint(d)});
-  $('ltsub').textContent=ltOff||!ltItems.length?'':ltOn?ltOn+' '+(ltOn===1?t('light on'):t('lights on')):t('all lights off');
+  var cnt=ltOn?ltOn+' '+(ltOn===1?t('light on'):t('lights on')):t('all lights off');
+  $('ltsub').textContent=ltOff||!(ltItems.length||ltArea)?'':ltArea?ltArea.name+' \u00B7 '+cnt:cnt;
   $('lth').textContent=t('Scenes')+(ltRoom?' \u00B7 '+ltRoom:'')}
 function lightAct(d){
-  var l=d._l;if(!l.all&&l.off)return;
-  ltItems.forEach(function(x){x.active=!l.all&&x.id===l.id});if(l.all)ltOn=0;ltPaintAll();   /* show it at once; the answer corrects it */
-  api(l.all?'/api/lights/off':'/api/scenes/activate',l.all?{}:{id:l.id}).then(function(x){if(x&&x.error)toast(x.error);ltSet(x)}).catch(function(){toast(t('Home Assistant did not answer'))})}
+  var l=d._l;if(!l.room&&l.off)return;
+  if(l.room){if(ltArea){ltArea.on=!ltArea.on;ltOn=ltArea.on?Math.max(1,ltOn):0}}else ltItems.forEach(function(x){x.active=x.id===l.id});ltPaintAll();   /* show it at once; the answer corrects it */
+  api(l.room?'/api/area/toggle':'/api/scenes/activate',l.room?{}:{id:l.id}).then(function(x){if(x&&x.error)toast(x.error);ltSet(x)}).catch(function(){toast(t('Home Assistant did not answer'))})}
 setInterval(wxLoad,15*60000);setInterval(ltLoad,30000);
 
 function setFocus(nr,nc,first){
@@ -852,7 +855,7 @@ function rebuild(){
   heroEl=null;
   if(hero&&heroApp){heroEl=tile(heroApp);heroDeco(heroEl,heroApp);he.appendChild(heroEl);hrow.push(heroEl)}
   if(hero&&document.body.getAttribute('data-lights')==='show'){
-    if(ltItems.length)ltItems.concat([{all:true}]).forEach(function(l){var x=ltTile(l);lr.appendChild(x);hrow.push(x)});
+    if(ltItems.length||ltArea)ltItems.concat(ltArea?[{room:true}]:[]).forEach(function(l){var x=ltTile(l);lr.appendChild(x);hrow.push(x)});
     else{var m=document.createElement('div');m.className='pm';m.textContent=ltOff?t('Connect Home Assistant in the manager app: Voice > Set up from your phone'):'';lr.appendChild(m)}
     ltPaintAll()}
   var showDeck=document.body.getAttribute('data-deck')==='show'&&deckItems.length>0;

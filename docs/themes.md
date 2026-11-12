@@ -186,7 +186,7 @@ when the focus moves down into it (Back or Up closes it); a dock at the top leav
 | `hero.live` | `true` or `false` | `true` | Show the input live in the large picture, with sound while it has the focus. |
 | **panel** | | | |
 | `panel.weather` | `true` or `false` | `true` | Show the rain forecast in the panel (place: manager > Voice > Set up from your phone, or Home Assistant's location). |
-| `panel.lights` | `true` or `false` | `true` | Show the Home Assistant scenes (and All off) in the panel. |
+| `panel.lights` | `true` or `false` | `true` | Show the Home Assistant scenes (and the toggle for the TV's room) in the panel. |
 | **dock** | | | |
 | `dock.anchor` | `top`, `bottom` | `top` | Which screen edge `dock.y` counts from. |
 | `dock.align` | `left`, `center`, `right` | `left` | Which side `dock.x` counts from; `center` centres the dock. |

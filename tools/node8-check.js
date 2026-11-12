@@ -357,7 +357,7 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   // the place comes from the phone page or Home Assistant, the token never reaches the page, only scenes can be turned on
   const homeMod = require(path.join(helper, 'home'));
   ok(homeMod.summary([{ t: '20:00', mm: 0 }, { t: '21:00', mm: 0 }, { t: '22:00', mm: 0.4 }]) === 'Rain from 22:00' && homeMod.summary([{ t: '20:00', mm: 1 }, { t: '21:00', mm: 0 }]) === 'Raining, dry by 21:00' && homeMod.summary([{ t: '20:00', mm: 0 }, { t: '21:00', mm: 0.05 }]) === 'Dry for the next 2 hours', 'the forecast line says when rain starts or stops');
-  const hmHits = [];
+  const hmHits = []; let hmLiving = 'on';
   const hmSrv = http.createServer((q, rq) => {
     let b = ''; q.on('data', c => { b += c; }); q.on('end', () => {
       hmHits.push(q.method + ' ' + q.url + ' ' + (q.headers.authorization || '') + ' ' + b);
@@ -365,7 +365,13 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
       if (/^\/v1\/search/.test(q.url)) return send(/name=Nowhere/.test(q.url) ? { results: [] } : { results: [{ name: 'Ghent', latitude: 51.05, longitude: 3.72 }] });
       if (/^\/v1\/forecast/.test(q.url)) return send({ current: { time: '2026-10-25T20:15', temperature_2m: 12.4, weather_code: 3 }, hourly: { time: ['2026-10-25T19:00', '2026-10-25T20:00', '2026-10-25T21:00', '2026-10-25T22:00'], temperature_2m: [13, 12.4, 11.6, 11], precipitation: [0, 0, 0, 0.8], precipitation_probability: [0, 5, 20, 80], weather_code: [3, 3, 0, 61], is_day: [1, 1, 0, 0] } });
       if (q.url === '/api/config') return q.headers.authorization === 'Bearer HATOK' ? send({ latitude: 50.85, longitude: 4.35, location_name: 'Home' }) : send({}, 401);
-      if (q.url === '/api/states') return send([{ entity_id: 'light.kitchen', state: 'off', attributes: { friendly_name: 'Kitchen' } }, { entity_id: 'light.living', state: 'on', attributes: { friendly_name: 'Living room' } }, { entity_id: 'scene.movie', state: '2026-10-25T19:00:00+00:00', attributes: { friendly_name: 'Movie' } }, { entity_id: 'scene.evening', state: '2026-10-25T18:00:00+00:00', attributes: { friendly_name: 'Evening' } }, { entity_id: 'scene.old_one', state: 'unavailable', attributes: {} }, { entity_id: 'switch.boiler', state: 'on', attributes: {} }]);
+      if (q.url === '/api/states') return send([{ entity_id: 'light.kitchen', state: 'off', attributes: { friendly_name: 'Kitchen' } }, { entity_id: 'light.bedroom', state: 'on', attributes: { friendly_name: 'Bedroom' } }, { entity_id: 'light.living', state: hmLiving, attributes: { friendly_name: 'Living room' } }, { entity_id: 'scene.movie', state: '2026-10-25T19:00:00+00:00', attributes: { friendly_name: 'Movie' } }, { entity_id: 'scene.evening', state: '2026-10-25T18:00:00+00:00', attributes: { friendly_name: 'Evening' } }, { entity_id: 'scene.old_one', state: 'unavailable', attributes: {} }, { entity_id: 'switch.boiler', state: 'on', attributes: {} }]);
+      if (q.method === 'POST' && q.url === '/api/template') {   // Home Assistant's template API: the TV's area and its lights
+        const t = (JSON.parse(b || '{}').template) || '';
+        if (/states\.media_player/.test(t)) return send([['media_player.cast', 'kitchen', 'Kitchen speaker'], ['media_player.lg_tv', 'living_room', 'LG TV']]);
+        if (/area_name\("living_room"\)/.test(t)) return send({ name: 'Living Room', lights: ['light.living'] });
+        return send({ name: '', lights: [] });
+      }
       if (/^\/api\/services\/(light|scene)\//.test(q.url)) return send([]);
       send({}, 404);
     });
@@ -390,7 +396,13 @@ const fake = (url, method) => { const res = { code: 0, out: '', writeHead(c) { t
   hmR = await hmCall('/api/scenes/all'); ok(hmR.j.items.length === 3 && hmR.j.picked.length === 0, 'every scene is listed for choosing');
   hmR = await hmCall('/api/scenes/pick', 'POST', { ids: ['scene.movie', 'switch.boiler', 'scene.evening'] });
   ok(hmR.code === 200 && JSON.stringify(hmConf.home.scenes) === '["scene.movie","scene.evening"]' && hmR.j.items.map(x => x.name).join() === 'Movie,Evening', 'the chosen scenes are kept in config.json and shown in that order; other entities are dropped');
-  hmR = await hmCall('/api/lights/off', 'POST'); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/light\/turn_off Bearer HATOK \{"entity_id":"all"\}/.test(h)), 'All off switches every light off');
+  // the room toggle: only the TV's own area (found through the LG TV's media player), never the other rooms
+  hmR = await hmCall('/api/scenes');
+  ok(hmR.j.area && hmR.j.area.id === 'living_room' && hmR.j.area.name === 'Living Room' && hmR.j.area.on === true && hmR.j.lightsOn === 1, 'the room is the TV\'s area, and only its lights are counted (the bedroom light that is on is not)');
+  hmR = await hmCall('/api/area/toggle', 'POST'); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/light\/turn_off Bearer HATOK \{"area_id":"living_room"\}$/.test(h)) && !hmHits.some(h => /"entity_id":"all"/.test(h)), 'with a light on, the toggle switches off that area only');
+  hmLiving = 'off'; hmConf.home = Object.assign({}, hmConf.home, { areaScene: 'scene.evening' });
+  hmR = await hmCall('/api/area/toggle', 'POST'); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/scene\/turn_on Bearer HATOK \{"entity_id":"scene.evening"\}$/.test(h)), 'with its lights off, the toggle turns on the room\'s scene (home.areaScene)');
+  delete hmConf.home.areaScene; hmR = await hmCall('/api/area/toggle', 'POST'); ok(hmR.code === 200 && hmHits.some(h => /^POST \/api\/services\/light\/turn_on Bearer HATOK \{"area_id":"living_room"\}$/.test(h)), 'without a scene set, it turns the room\'s lights on');
   hmSrv.close(); delete process.env.CYTV_METEO_URL; delete process.env.CYTV_GEO_URL;
   const heroTh = themeMod.normalize({ home: { layout: 'hero' }, hero: { w: 1040, y: 136 }, dock: { anchor: 'bottom' } }, 'herotest');
   ok(heroTh.v['home.layout'] === 'hero' && heroTh.v['hero.live'] === true && themeMod.normalize({ home: { layout: 'grid' } }, 'x').v['home.layout'] === 'dock', 'the hero layout is a theme setting; an unknown layout keeps the dock');
